@@ -467,7 +467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   obj: {fileID: 1967497845}
-  PlayGameButton: {fileID: 1433633176}
+  PlayGameButton: {fileID: 1433633174}
   Text: {fileID: 629702051}
 --- !u!114 &1108636081
 MonoBehaviour:

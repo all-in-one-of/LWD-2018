@@ -26,12 +26,12 @@ public class MainMenu : MonoBehaviour
 
     private float _timer;
     public GameObject obj;
-    public Button PlayGameButton;
+    public GameObject PlayGameButton;
     public Text Text;
 
     public void Start()
     {
-        PlayGameButton.enabled = false;
+        PlayGameButton.SetActive(false); 
         foreach (var location in _locations)
         {
             var o =
@@ -100,14 +100,15 @@ public class MainMenu : MonoBehaviour
         }
         Text.text = "The closest location is: " + tMin;
         _closestLocation = tMin;
-
-        if (_gameLocations[_closestLocation] != null)
+        string s;
+        _gameLocations.TryGetValue(tMin, out s);
+        if (s != null)
         {
-            PlayGameButton.enabled = true;
+            PlayGameButton.SetActive(true);
         }
         else
         {
-            PlayGameButton.enabled = false;
+            PlayGameButton.SetActive(false);
         }
     }
 
