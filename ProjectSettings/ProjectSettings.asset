@@ -11,13 +11,13 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: AnotherGameCompany
-  productName: Leeuwarden-2018
+  productName: D-Drive App
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_ShowUnitySplashScreen: 1
   defaultScreenWidth: 1024
   defaultScreenHeight: 768
-  defaultScreenWidthWeb: 960
+  defaultScreenWidthWeb: 1024
   defaultScreenHeightWeb: 600
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
@@ -500,7 +500,7 @@ PlayerSettings:
   WebGL::template: APPLICATION:Default
   additionalIl2CppArgs::additionalIl2CppArgs: 
   firstStreamedSceneWithResources: 0
-  cloudProjectId: 9a3923a9-182f-4fee-b8f7-a2bba41a9027
-  projectName: Leeuwarden-2018
-  organizationId: anothergamecompany
+  cloudProjectId: 
+  projectName: 
+  organizationId: 
   cloudEnabled: 0
