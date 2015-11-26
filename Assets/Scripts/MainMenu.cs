@@ -31,7 +31,7 @@ public class MainMenu : MonoBehaviour
 
     public void Start()
     {
-        PlayGameButton.SetActive(false); 
+        PlayGameButton.SetActive(false);
         foreach (var location in _locations)
         {
             var o =
