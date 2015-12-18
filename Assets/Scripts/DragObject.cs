@@ -27,6 +27,7 @@ public class DragObject : MonoBehaviour
             if (Physics.Raycast(ray, out hit) && (hit.collider.tag == "Draggable"))
             {
                 _toDrag = hit.transform;
+                _toDrag.GetComponent<Rigidbody>().isKinematic = true;
                 _dist = hit.transform.position.z - Camera.main.transform.position.z;
                 v3 = new Vector3(pos.x, pos.y, _dist);
                 v3 = Camera.main.ScreenToWorldPoint(v3);
@@ -42,6 +43,7 @@ public class DragObject : MonoBehaviour
         }
         if (Dragging && (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled))
         {
+            _toDrag.GetComponent<Rigidbody>().isKinematic = false;
             Dragging = false;
         }
     }

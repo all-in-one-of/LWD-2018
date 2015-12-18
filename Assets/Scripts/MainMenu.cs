@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
@@ -80,7 +81,7 @@ public class MainMenu : MonoBehaviour
         print(g);
         if (g != null)
         {
-            Application.LoadLevel(g);
+            SceneManager.LoadScene(g);
         }
     }
 

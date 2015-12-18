@@ -24,6 +24,6 @@ public class InmateAI : MonoBehaviour
                 _rigidbody.AddExplosionForce(250, p, 50);
             }
         }
-            
+
     }
 }
