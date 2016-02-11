@@ -1,18 +1,18 @@
 ﻿using UnityEngine;
 
-public class Delete : MonoBehaviour
+public class BHPDelete : MonoBehaviour
 {
-    private DragObject _dragObject;
-    private ObjectPool _objectPool;
+    private BHPDragObject _dragObject;
+    private BHPObjectPool _objectPool;
 
-    private ScoreCounter _score;
+    private BHPScoreCounter _score;
     public bool Add;
 
     public void Awake()
     {
-        _objectPool = GameObject.Find("ObjectPool").GetComponent<ObjectPool>();
-        _dragObject = GameObject.Find("DragObject").GetComponent<DragObject>();
-        _score = GameObject.Find("Score").GetComponent<ScoreCounter>();
+        _objectPool = GameObject.Find("ObjectPool").GetComponent<BHPObjectPool>();
+        _dragObject = GameObject.Find("DragObject").GetComponent<BHPDragObject>();
+        _score = GameObject.Find("Score").GetComponent<BHPScoreCounter>();
     }
 
 

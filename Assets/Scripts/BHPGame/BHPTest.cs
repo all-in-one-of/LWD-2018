@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Test : MonoBehaviour
+public class BHPTest : MonoBehaviour
 {
     public AnimationClip Clip;
 

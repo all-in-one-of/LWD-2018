@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class ScoreCounter : MonoBehaviour
+public class BHPScoreCounter : MonoBehaviour
 {
     private int _score;
     private Text Text;

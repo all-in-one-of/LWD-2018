@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class DragObject : MonoBehaviour
+public class BHPDragObject : MonoBehaviour
 {
     private float _dist;
     private Vector3 _offset;

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class MainMenu : MonoBehaviour
+public class BHPMainMenu : MonoBehaviour
 {
     private readonly Dictionary<string, string> _gameLocations = new Dictionary<string, string>
     {

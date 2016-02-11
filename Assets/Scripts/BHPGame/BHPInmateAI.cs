@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class InmateAI : MonoBehaviour
+public class BHPInmateAI : MonoBehaviour
 {
     private Rigidbody _rigidbody;
 

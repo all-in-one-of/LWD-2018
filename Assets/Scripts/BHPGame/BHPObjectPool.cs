@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectPool : MonoBehaviour
+public class BHPObjectPool : MonoBehaviour
 {
     public List<GameObject> Active;
 
