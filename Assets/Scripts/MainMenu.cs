@@ -7,8 +7,8 @@ public class BHPMainMenu : MonoBehaviour
 {
     private readonly Dictionary<string, string> _gameLocations = new Dictionary<string, string>
     {
-        {"De Blokhuispoort", "BHPGame"}
-        //{"Friesland College", "Test"},
+        {"De Blokhuispoort", "BHPGame"},
+        {"Oldehove", "Oldehove"}
     };
 
     private readonly Dictionary<Vector2, string> _locations = new Dictionary<Vector2, string>
@@ -33,6 +33,7 @@ public class BHPMainMenu : MonoBehaviour
     public void Start()
     {
         PlayGameButton.SetActive(false);
+
         foreach (var location in _locations)
         {
             var o =
@@ -43,12 +44,14 @@ public class BHPMainMenu : MonoBehaviour
                 : location.Value;
         }
         Text.text = "Start";
+
         // First, check if user has location service enabled
         if (!Input.location.isEnabledByUser)
         {
             Text.text = "location is disabled!";
             Text.color = Color.red;
         }
+
         // Start service before querying location
         Input.location.Start();
     }
@@ -79,6 +82,7 @@ public class BHPMainMenu : MonoBehaviour
     {
         var g = _gameLocations[_closestLocation];
         print(g);
+
         if (g != null)
         {
             SceneManager.LoadScene(g);
@@ -90,6 +94,7 @@ public class BHPMainMenu : MonoBehaviour
         var tMin = "";
         var minDist = Mathf.Infinity;
         var curLoc = new Vector2(latitude, longitude);
+
         foreach (var location in _locations)
         {
             var dist = Vector2.Distance(location.Key, curLoc);
@@ -99,10 +104,12 @@ public class BHPMainMenu : MonoBehaviour
                 minDist = dist;
             }
         }
+
         Text.text = "The closest location is: " + tMin;
         _closestLocation = tMin;
         string s;
         _gameLocations.TryGetValue(tMin, out s);
+
         if (s != null)
         {
             PlayGameButton.SetActive(true);

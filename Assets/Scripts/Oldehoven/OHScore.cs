@@ -1,15 +1,20 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.UI;
 
-public class OHScore : MonoBehaviour {
+public class OHScore : MonoBehaviour
+{
+    private Text _text;
+    public int Score;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    private void Start()
+    {
+        _text = GameObject.Find("Score").GetComponent<Text>();
+        _text.text = "Score " + Score;
+    }
+
+    public void UpdateScore(int s)
+    {
+        Score += s;
+        _text.text = "Score " + Score;
+    }
 }

@@ -24,6 +24,5 @@ public class BHPInmateAI : MonoBehaviour
                 _rigidbody.AddExplosionForce(250, p, 50);
             }
         }
-
     }
 }

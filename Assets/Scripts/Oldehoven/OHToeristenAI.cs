@@ -1,23 +1,20 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class OHToeristenAI : MonoBehaviour
 {
-    private float _pos;
     private int _dir;
+    private float _pos;
     private Rigidbody _rigidbody;
     private float _waitDelay;
 
-    // Use this for initialization
-    void Start()
+
+    private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-
         if (_waitDelay > 0)
         {
             _waitDelay -= Time.deltaTime;

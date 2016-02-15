@@ -6,7 +6,7 @@ public class BHPDelete : MonoBehaviour
     private BHPObjectPool _objectPool;
 
     private BHPScoreCounter _score;
-    public bool Add;
+    public bool HasEscaped;
 
     public void Awake()
     {
@@ -23,9 +23,6 @@ public class BHPDelete : MonoBehaviour
         o.GetComponent<Rigidbody>().isKinematic = true;
         o.transform.position = new Vector3(Random.Range(-10, 10), -20);
         _objectPool.InActive.Add(o);
-        if (Add)
-            _score.Score++;
-        else
-            _score.Score--;
+        BHPScoreCounter.UpdateScore(HasEscaped);
     }
 }

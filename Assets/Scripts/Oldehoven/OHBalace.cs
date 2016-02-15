@@ -1,36 +1,28 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.UI;
 
 public class OHBalace : MonoBehaviour
 {
+    private float _force;
     private Rigidbody _rigidbody;
 
-    private float force;
+    public Text TextBD;
 
-    // Use this for initialization
-    void Start()
+    private void Start()
     {
         _rigidbody = GetComponent<Rigidbody>();
 
-        if (!Input.gyro.enabled)
-        {
-            Input.gyro.enabled = true;
-            print(Input.gyro.enabled);
-        }
     }
 
-    // Update is called once per frame
-    void Update()
+
+    private void Update()
     {
-
 #if UNITY_EDITOR
-        force -= Input.GetAxis("Mouse X");
+        _force += Input.GetAxis("Mouse X");
 #else
-        force -= Input.acceleration.x;
+        _force = Input.acceleration.x * 50;
 #endif
-
-        _rigidbody.AddTorque(new Vector3(0, 0, force)*100);
+        TextBD.text = _force+"";
+        _rigidbody.AddTorque(new Vector3(0, 0, -_force)*100);
     }
-
-
 }

@@ -6,6 +6,7 @@ public class BHPSpawner : MonoBehaviour
     private BHPObjectPool _objectPool;
     private float _timer;
     private int spawns;
+
     public void Awake()
     {
         _objectPool = GameObject.Find("ObjectPool").GetComponent<BHPObjectPool>();
@@ -25,7 +26,6 @@ public class BHPSpawner : MonoBehaviour
             _animator.SetBool("enabled", true);
             if (_objectPool.InActive.Count > 0)
             {
-
                 var o = _objectPool.InActive[0];
                 o.transform.position = transform.position + new Vector3(0.5f, -0.5f);
                 o.GetComponent<Rigidbody>().isKinematic = false;
