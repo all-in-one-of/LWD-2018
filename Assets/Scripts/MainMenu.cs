@@ -3,14 +3,20 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class BHPMainMenu : MonoBehaviour
+public class MainMenu : MonoBehaviour
 {
+    /// <summary>
+    /// The scenes that belong to the locations
+    /// </summary>
     private readonly Dictionary<string, string> _gameLocations = new Dictionary<string, string>
     {
         {"De Blokhuispoort", "BHPGame"},
         {"Oldehove", "Oldehove"}
     };
 
+    /// <summary>
+    /// The locations that belong to the coordinates
+    /// </summary>
     private readonly Dictionary<Vector2, string> _locations = new Dictionary<Vector2, string>
     {
         {new Vector2(53.189800f, 5.783395f), "Friesland College"},
@@ -78,6 +84,9 @@ public class BHPMainMenu : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Plays the selected game.
+    /// </summary>
     public void PlayGame()
     {
         var g = _gameLocations[_closestLocation];
@@ -89,6 +98,11 @@ public class BHPMainMenu : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Gets the clostest location with the specified latitude & longitude.
+    /// </summary>
+    /// <param name="latitude">The latitude.</param>
+    /// <param name="longitude">The longitude.</param>
     private void Closest(float latitude, float longitude)
     {
         var tMin = "";
@@ -120,6 +134,11 @@ public class BHPMainMenu : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Converts realworld to unity coordinates.
+    /// </summary>
+    /// <param name="position">The position.</param>
+    /// <returns> A new vector with unity coordinates</returns>
     private Vector3 ToUnityCoordinates(Vector2 position)
     {
         //53.201233, 5.799913

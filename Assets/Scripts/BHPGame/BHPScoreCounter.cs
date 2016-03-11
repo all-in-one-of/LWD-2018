@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Counts the score ofthe BHP game
+/// </summary>
 public class BHPScoreCounter : MonoBehaviour
 {
     private static int _escaped;

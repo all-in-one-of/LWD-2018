@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09ad9ddc0e5b942a98ec392b434d39bd, type: 3}
+  m_Name: FabricSettings
+  m_EditorClassIdentifier: 
+  email: sietze.greydanus@AnotherFoxGuy.com
+  rawToken: '{"access_token":"22bb069c5f8dde9d55b8ec0d9c24c3ed61f24044ef811536cd1ca2fa5f5d2148","refresh_token":"d5b157aa8b6a88599667ccae3687a41ced3111d2363fb0932c21fdded185feca","token_type":"bearer","expires_in":86400}'
+  organization:
+    Name: AnotherGameCompany
+    Id: 56e169cc4d8f5b7e6800015b
+    ApiKey: 2fbdb52def038ac5255c7de0d8f9490c5b8cfd9c
+    BuildSecret: 4f865a2bf3076d1a3edc7e72cbccaa47cd1be5d0912d528d2cfcffd13e8caa26
+  iconUrl: https://s3.amazonaws.com/assets.crashlytics.com/production/project/5068257/build_version/36842654/icon/20916365/icon.png
+  dashboardUrl: https://www.fabric.io/anothergamecompany/android/apps/com.anotherfoxguy.lwrd18
+  flowSequence: 200
+  kit: Twitter
+  installedKits:
+  - Name: Crashlytics
+    Installed: 1
+    Enabled: 1
+    Meta: []
