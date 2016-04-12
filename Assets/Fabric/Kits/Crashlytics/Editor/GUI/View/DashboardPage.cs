@@ -32,7 +32,7 @@
 
 			static Components()
 			{
-				PlaceHolderImage = Fabric.Internal.Editor.Resources.Manager.Load ("image.icon.placeholder.png");
+				PlaceHolderImage = Fabric.Internal.Editor.Images.Loader.Load ("image.icon.placeholder.png");
 				IconBackground = Fabric.Internal.Editor.View.Render.MakeBackground (200, 200, Fabric.Internal.Editor.View.Render.DBlue);
 
 				IconStyle = new GUIStyle (GUI.skin.button);

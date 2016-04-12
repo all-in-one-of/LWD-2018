@@ -223,6 +223,14 @@ Prefab:
       propertyPath: m_TagString
       value: Toerist
       objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -381,6 +389,14 @@ Prefab:
     - target: {fileID: 194028, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
       propertyPath: m_TagString
       value: Toerist
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
@@ -576,14 +592,6 @@ Prefab:
       propertyPath: m_Name
       value: Toerist (8)
       objectReference: {fileID: 0}
-    - target: {fileID: 194028, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 194028, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
-      propertyPath: m_TagString
-      value: Toerist
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -753,6 +761,14 @@ Prefab:
       propertyPath: m_TagString
       value: Toerist
       objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -860,7 +876,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a70c2a48f1e7b9e43a0d916e31bf34f1, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 1
@@ -914,7 +930,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 947109965}
-  m_Mesh: {fileID: 4300000, guid: 98d48fb8efec0d744b5d6b7dfba0d1ad, type: 3}
+  m_Mesh: {fileID: 4300002, guid: 8c264697e6e3aea41b2e71cd3ec8be5d, type: 3}
 --- !u!4 &947109969
 Transform:
   m_ObjectHideFlags: 0
@@ -939,7 +955,7 @@ MeshCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Convex: 1
-  m_Mesh: {fileID: 4300000, guid: 98d48fb8efec0d744b5d6b7dfba0d1ad, type: 3}
+  m_Mesh: {fileID: 4300002, guid: 8c264697e6e3aea41b2e71cd3ec8be5d, type: 3}
 --- !u!54 &947109971
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1103,6 +1119,14 @@ Prefab:
       propertyPath: m_TagString
       value: Toerist
       objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -1156,6 +1180,14 @@ Prefab:
     - target: {fileID: 194028, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
       propertyPath: m_TagString
       value: Toerist
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
@@ -1345,6 +1377,14 @@ Prefab:
       propertyPath: m_TagString
       value: Toerist
       objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -1460,6 +1500,14 @@ Prefab:
       propertyPath: m_TagString
       value: Toerist
       objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -1558,6 +1606,14 @@ Prefab:
       propertyPath: m_TagString
       value: Toerist
       objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
   m_IsPrefabParent: 0
@@ -1577,7 +1633,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1922866686
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1590,9 +1646,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 188521927}
   m_RootOrder: 1
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 211, y: -151.67}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: -189, y: 82.3}
   m_SizeDelta: {x: 378, y: 165}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1922866687
@@ -1753,6 +1809,14 @@ Prefab:
     - target: {fileID: 194028, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
       propertyPath: m_TagString
       value: Toerist
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.y
+      value: 0.34999847
+      objectReference: {fileID: 0}
+    - target: {fileID: 14510314, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}
+      propertyPath: m_ConnectedAnchor.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c5649ae08e6876d498c0c891811ddcd0, type: 2}

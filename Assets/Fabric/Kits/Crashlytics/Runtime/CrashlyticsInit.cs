@@ -84,6 +84,7 @@
 		{
 			if (type == LogType.Exception) {
 				Utils.Log (kitName, "Recording exception: " + message);
+				Utils.Log (kitName, "Exception stack trace: " + stackTraceString);
 
 				string[] messageParts = getMessageParts(message);
 				Crashlytics.RecordCustomException (messageParts[0], messageParts[1], stackTraceString);

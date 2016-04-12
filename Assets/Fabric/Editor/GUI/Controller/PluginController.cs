@@ -146,7 +146,7 @@
 		private void InitiateUpdate(
 			Action<float> reportProgress,
 			Action<string> downloadComplete,
-			Action<string> downloadError,
+			Action<System.Exception> downloadError,
 			Func<bool> isCancelled
 		)
 		{
@@ -325,7 +325,9 @@
 			}
 
 			if (KitUpdateInProgress ()) {
+                
 				if (KitUtils.IsKitInstalled (Settings.Instance.Kit)) {
+                    
 					if (!Update.PeriodicUpdateManager.IsKitUpdateAvailable (kit.Name, kit.Instance.Version ())) {
 						// At this point, the upgrade is done for the given kit. Since this kit was previously
 						// installed, we do not need to go through the flow.
@@ -377,6 +379,32 @@
 		#endregion
 
 		#region Login
+		private static Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery OnLoginError(System.Exception e, Action<string> messageOnError)
+		{
+			if (Net.Utils.IsNetworkUnavailableFrom (e)) {
+				messageOnError ("Network connection is not available.");
+				return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
+			}
+
+			Utils.Warn ("An exception has occured; {0}", e.Message);
+
+			if (!(e is WebException)) {
+				messageOnError ("Please contact support@fabric.io");
+				return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
+			}
+			
+			WebException webException = e as WebException;
+			HttpWebResponse response = webException.Response as HttpWebResponse;
+			
+			if (response != null && response.StatusCode == HttpStatusCode.Unauthorized) {
+				messageOnError ("Invalid Credentials");
+				return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
+			}
+			
+			messageOnError ("Network Error!");
+			return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
+		}
+
 		private Action<string, Action<string>> Login()
 		{
 			return delegate(string password, Action<string> messageOnError) {
@@ -385,23 +413,7 @@
 						() => { return client.Get (args[0] as string, args[1] as string); }
 					);
 				}).OnError ((System.Exception e) => {
-					Utils.Warn ("An exception has occured; {0}", e.Message);
-
-					if (!(e is WebException)) {
-						messageOnError ("Please contact support@fabric.io");
-						return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
-					}
-
-					WebException webException = e as WebException;
-					HttpWebResponse response = webException.Response as HttpWebResponse;
-
-					if (response != null && response.StatusCode == HttpStatusCode.Unauthorized) {
-						messageOnError ("Invalid Credentials");
-						return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
-					}
-
-					messageOnError ("Network Error!");
-					return Detail.AsyncTaskRunner<Client.Token>.ErrorRecovery.Nothing;
+					return OnLoginError (e, messageOnError);
 				}).OnCompletion ((Client.Token token) => {
 					Settings.Instance.Token = token;
 				}).Run (Settings.Instance.Email, password);

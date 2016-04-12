@@ -63,12 +63,22 @@
 		private void CheckForUpdates(object state)
 		{
 			try {
+				bool noNetwork = false;
 				string raw = Net.Validator.MakeRequest(
-					() => {
-						return client.DownloadString (dependencyGraphUrl);
-					},
-					(Exception e) => { Utils.Warn ("An error occured when trying to fetch the dependency graph; {0}", e.Message); }
+					() => { return client.DownloadString (dependencyGraphUrl); },
+					(Exception e) => {
+						if (Net.Utils.IsNetworkUnavailableFrom (e)) {
+							noNetwork = true;
+							return;
+						}
+
+						Utils.Warn ("An error occured when trying to fetch the dependency graph; {0}", e.Message);
+					}
 				);
+
+				if (noNetwork) {
+					return;
+				}
 
 				if (String.IsNullOrEmpty (raw)) {
 					Utils.Warn ("Dependency graph is empty, skipping update check...");

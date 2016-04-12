@@ -7,7 +7,6 @@
 	using System.Collections;
 	using System.Collections.Generic;
 	using Fabric.Internal.Runtime;
-	using System.Text.RegularExpressions;
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
 	internal class AndroidImpl : Impl
@@ -106,32 +105,6 @@
 			var logExceptionArgs = new jvalue[1];
 			logExceptionArgs[0].l = exceptionObj;
 			AndroidJNI.CallStaticVoidMethod (crashClass, logExceptionMethod, logExceptionArgs);
-		}
-
-		private static Dictionary<string, string>[] ParseStackTraceString (string stackTraceString)
-		{
-			string[] splitStackTrace = stackTraceString.Split(Environment.NewLine.ToCharArray());
-			var result = new List< Dictionary<string, string> >();
-
-			foreach (var frameString in splitStackTrace) {
-				var regex = @"([^\s\.]+)\.([^\s]+)";
-				var matches = Regex.Matches(frameString, regex);
-
-				if (matches.Count != 1) {
-					continue;
-				}
-
-				var match = matches[0];
-				var dict = new Dictionary<string, string>();
-				dict.Add("class", match.Groups[1].Value);
-				dict.Add("method", match.Groups[2].Value);
-				dict.Add("file", match.Groups[1].Value);
-				dict.Add("line", "0");
-
-				result.Add (dict);
-			}
-
-			return result.ToArray();
 		}
 
 	}

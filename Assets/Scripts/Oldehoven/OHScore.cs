@@ -26,9 +26,9 @@ public class OHScore : MonoBehaviour
     public void OnTriggerEnter(Collider other)
     {
         Destroy(other.gameObject);
-        _toeristen = GameObject.FindGameObjectsWithTag("Toerist").Length - 1;
+        _toeristen = GameObject.FindGameObjectsWithTag("Toerist").Length;
         print(_toeristen);
-        if (_toeristen == 0)
+        if (_toeristen <= 0)
         {
             _end = true;
             _endScreen.SetActive(true);

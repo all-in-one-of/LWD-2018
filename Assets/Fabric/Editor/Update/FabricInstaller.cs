@@ -29,7 +29,7 @@
 
 		public delegate void ReportInstallProgress (float progress);
 		public delegate void DownloadComplete (string downloadPath);
-		public delegate void DownloadError (string message);
+		public delegate void DownloadError (System.Exception exception);
 		public delegate bool IsCancelled ();
 
 		private Config config;
@@ -59,7 +59,11 @@
 					return releaseNotes;
 				}
 			} catch (System.Exception e) {
-				Utils.Warn ("Couldn't fetch release notes from {0}; {1}", config.ReleaseNotesUrl, e.ToString ());
+				if (Net.Utils.IsNetworkUnavailableFrom (e)) {
+					Utils.Log ("No valid network connection available.");
+				} else {
+					Utils.Warn ("Couldn't fetch release notes from {0}; {1}", config.ReleaseNotesUrl, e.ToString ());
+				}
 			}
 
 			releaseNotes = "No release notes available!";
@@ -79,7 +83,7 @@
 					return API.V1.DownloadFile (config.PackageUrl, (progress) => reportProgress(progress), () => { return isCancelled (); });
 				});
 			}).OnError ((System.Exception e) => {
-				downloadError(e.Message);
+				downloadError(e);
 				return Detail.AsyncTaskRunner<byte[]>.ErrorRecovery.Nothing;
 			}).OnCompletion ((byte[] downloadedBytes) => {
 				if (downloadedBytes.Length == 0) {
@@ -90,7 +94,7 @@
 					downloadComplete (downloadPath);
 					InstallPackage (downloadPath);
 				} catch (IOException e) {
-					downloadError (e.Message);
+					downloadError (e as Exception);
 				}
 			}).Run ();
 		}

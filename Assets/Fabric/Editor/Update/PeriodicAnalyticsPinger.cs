@@ -23,8 +23,19 @@
 		private static Analytics.PeriodicPing analytics;
 #pragma warning restore 0414
 
+		private delegate void EnqueueEventDelegate(Analytics.Events.AnalyticsEvent analyticsEvent);
+		private static EnqueueEventDelegate EnqueueEvent = EnqueueToAnalytics;
+
 		static PeriodicPinger()
 		{
+			// When in batch mode:
+			// Make event queueing a no-op
+			// Don't initialize PeriodicPing analytics.
+			if (UnityEditorInternal.InternalEditorUtility.inBatchMode) {
+				EnqueueEvent = EnqueueNoOp;
+				return;
+			}
+
 			try {
 				if (!File.Exists (installIdFile)) {
 					using (File.Create (installIdFile)) {}
@@ -42,19 +53,24 @@
 					interval,
 					installId,
 					Fabric.Internal.Editor.Info.Version.ToString (),
-					(string message) => { Utils.Log ("Couldn't report plugin event, {0}", message); },
+					(System.Net.WebException e) => {
+						if (Net.Utils.IsNetworkUnavailableFrom (e)) {
+							return;
+						}
+
+						Utils.Log ("Couldn't report plugin event, {0}", e.Message);
+					},
 					() => {}
 				);
 			} catch (Exception e) {
-				Utils.Log ("Couldn't manipulate file 'Assets/Fabric/BuildId'; {0}", e.Message);
+				Utils.Log ("Couldn't manipulate file 'Assets/Fabric/InstallId'; {0}", e.Message);
 				return;
 			}
 		}
 
 		public static void Enqueue(Analytics.Events.AnalyticsEvent analyticsEvent)
 		{
-			analyticsEvent.Version = Fabric.Internal.Editor.Info.Version.ToString ();
-			analytics.Enqueue (analyticsEvent);
+			EnqueueEvent (analyticsEvent);
 		}
 
 		private static string ExtractInstallId (string[] lines)
@@ -69,6 +85,16 @@
 			}
 
 			return null;
+		}
+
+		private static void EnqueueToAnalytics(Analytics.Events.AnalyticsEvent analyticsEvent)
+		{
+			analyticsEvent.Version = Fabric.Internal.Editor.Info.Version.ToString ();
+			analytics.Enqueue (analyticsEvent);
+		}
+
+		private static void EnqueueNoOp(Analytics.Events.AnalyticsEvent analyticsEvent)
+		{
 		}
 	}
 }

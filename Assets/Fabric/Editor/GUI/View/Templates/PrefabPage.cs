@@ -5,7 +5,6 @@
 	using System.Collections.Generic;
 	using System;
 	using Fabric.Internal.Editor.View;
-	using Resources = Fabric.Internal.Editor.Resources;
 	
 	public class PrefabPage : Page
 	{
@@ -40,7 +39,7 @@
 			private static GUIStyle IconStyle;
 			private static readonly GUIStyle BorderStyle;
 			private static readonly GUIStyle MessageStyle;
-			private static readonly Texture2D PrefabIcon = Resources.Manager.Load ("prefab-box.png");
+			private static readonly Texture2D PrefabIcon = Images.Loader.Load ("prefab-box.png");
 
 			private static bool pressed = false;
 			private static Rect PrefabIconPosition = new Rect (0, 150, 192, 192);

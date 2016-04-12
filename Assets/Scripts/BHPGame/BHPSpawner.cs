@@ -20,8 +20,8 @@ public class BHPSpawner : MonoBehaviour
         _timer -= Time.deltaTime;
         if (_timer < 0)
         {
-            _objectPool.spawns++;
-            print(_objectPool.spawns);
+            _objectPool.Spawns++;
+            print(_objectPool.Spawns);
             _timer = Random.Range(5, 30);
             _animator.SetBool("enabled", true);
             if (_objectPool.InActive.Count > 0)

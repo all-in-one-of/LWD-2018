@@ -29,6 +29,11 @@
 			}).OnError ((System.Exception e) => {
 				string error = e.Message;
 
+				if (Net.Utils.IsNetworkUnavailableFrom (e)) {
+					onFailure ("Network is not available.");
+					return Detail.AsyncTaskRunner<T>.ErrorRecovery.Nothing;
+				}
+
 				if (e is API.V1.UnauthorizedException) {
 					try {
 						token = RefreshToken ();

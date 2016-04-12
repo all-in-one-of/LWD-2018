@@ -6,24 +6,23 @@
 	using System.Collections;
 	using System;
 	using Fabric.Internal.Editor.Controller;
-	using Resources = Fabric.Internal.Editor.Resources;
 	
 	internal class ValidationPage : Page
 	{
-		private static readonly Texture2D Rocket = Resources.Manager.Load ("image.rocket.png");
+		private static readonly Texture2D Rocket = Images.Loader.Load ("image.rocket.png");
 		private static readonly Texture2D[] Spinner = {
-			Resources.Manager.Load ("spinner_0.gif"),
-			Resources.Manager.Load ("spinner_1.gif"),
-			Resources.Manager.Load ("spinner_2.gif"),
-			Resources.Manager.Load ("spinner_3.gif"),
-			Resources.Manager.Load ("spinner_4.gif"),
-			Resources.Manager.Load ("spinner_5.gif"),
-			Resources.Manager.Load ("spinner_6.gif"),
-			Resources.Manager.Load ("spinner_7.gif"),
-			Resources.Manager.Load ("spinner_8.gif"),
-			Resources.Manager.Load ("spinner_9.gif"),
-			Resources.Manager.Load ("spinner_10.gif"),
-			Resources.Manager.Load ("spinner_11.gif")
+			Images.Loader.Load ("spinner_0.gif"),
+			Images.Loader.Load ("spinner_1.gif"),
+			Images.Loader.Load ("spinner_2.gif"),
+			Images.Loader.Load ("spinner_3.gif"),
+			Images.Loader.Load ("spinner_4.gif"),
+			Images.Loader.Load ("spinner_5.gif"),
+			Images.Loader.Load ("spinner_6.gif"),
+			Images.Loader.Load ("spinner_7.gif"),
+			Images.Loader.Load ("spinner_8.gif"),
+			Images.Loader.Load ("spinner_9.gif"),
+			Images.Loader.Load ("spinner_10.gif"),
+			Images.Loader.Load ("spinner_11.gif")
 		};
 
 		private static readonly View.Animation.Driver Driver = new View.Animation.Driver ((uint)Spinner.Length);

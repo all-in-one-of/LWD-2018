@@ -4,7 +4,6 @@
 	using UnityEditor;
 	using Fabric.Internal.Editor.Model;
 	using Fabric.Internal.Editor.Controller;
-	using Resources = Fabric.Internal.Editor.Resources;
 	using System;
 	
 	internal class LoginPage : Page
@@ -45,12 +44,12 @@
 			private static readonly Color32 ErrorColor = View.Render.FromHex (0xF39C12);
 			private static readonly Color32 LinkNormalColor = new Color32 (58, 158, 235, 255);
 			
-			private static readonly Texture2D Logo = Resources.Manager.Load ("fabric-icon.png");
-			private static readonly Texture2D LogoText = Resources.Manager.Load ("image.logo-text@2x.png");
-			private static readonly Texture2D LogoSlogan = Resources.Manager.Load ("image.power.on.words.png");
-			private static readonly Texture2D PowerButton = Resources.Manager.Load ("control.button.power.inactive@2x.png");
-			private static readonly Texture2D PowerButtonHover = Resources.Manager.Load ("control.button.power.hover@2x.png");
-			private static readonly Texture2D PowerButtonClicked = Resources.Manager.Load ("control.button.power.active@2x.png");
+			private static readonly Texture2D Logo = Images.Loader.Load ("fabric-icon.png");
+			private static readonly Texture2D LogoText = Images.Loader.Load ("image.logo-text@2x.png");
+			private static readonly Texture2D LogoSlogan = Images.Loader.Load ("image.power.on.words.png");
+			private static readonly Texture2D PowerButton = Images.Loader.Load ("control.button.power.inactive@2x.png");
+			private static readonly Texture2D PowerButtonHover = Images.Loader.Load ("control.button.power.hover@2x.png");
+			private static readonly Texture2D PowerButtonClicked = Images.Loader.Load ("control.button.power.active@2x.png");
 
 			private static readonly Texture2D FieldBackground;
 

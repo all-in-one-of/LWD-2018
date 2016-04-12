@@ -9,10 +9,12 @@
 		{
 			int s = text.IndexOf (starting);
 			int e = text.LastIndexOf (ending);
-			
-			return s == -1 || e == -1 ?
-				text :
-					text.Substring (s + 1, text.Length - s - 1).Substring (0, e - 1);
+
+			if (s < 0 || e < 0 || s > e) {
+				return text;
+			}
+
+			return text.Remove (e).Substring (s + 1);
 		}
 	}
 }

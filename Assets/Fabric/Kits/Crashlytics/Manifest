@@ -101,6 +101,8 @@ toplevel ./Fabric/Kits/Answers
 ./Plugins/Android/crashlytics-wrapper.meta
 ./Plugins/Android/crashlytics.meta
 ./Plugins/Android/fabric
+./Plugins/Android/fabric/AndroidManifest.xml
+./Plugins/Android/fabric/AndroidManifest.xml.meta
 ./Plugins/Android/fabric/Template-AndroidManifest.xml
 ./Plugins/Android/fabric/Template-AndroidManifest.xml.meta
 ./Plugins/Android/fabric/libs
@@ -129,6 +131,7 @@ toplevel ./Fabric/Kits/Answers
 toplevel ./Plugins/Android/answers
 toplevel ./Plugins/Android/beta
 toplevel ./Plugins/Android/crashlytics
+toplevel ./Plugins/Android/crashlytics-wrapper
 toplevel ./Plugins/Android/fabric
 ./Plugins/Android/fabric/AndroidManifest.xml
 ./Plugins/Android/fabric/AndroidManifest.xml.meta

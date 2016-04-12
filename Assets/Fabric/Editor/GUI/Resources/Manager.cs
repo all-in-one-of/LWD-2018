@@ -1,16 +1,17 @@
 ﻿namespace Fabric.Internal.Editor.Resources
 {
 	using UnityEngine;
-	using UnityEditor;
-	using System.Collections;
-	
+
+	/**
+	 * Deprecated. Use Fabric.Internal.Editor.Images.Loader
+	 * This class is included for backward-compatibility with Crashlytics Kit v. 1.0.0
+	 * If using Crashlytics Kit version > 1.0.0 this file can be removed.
+	 */
 	public class Manager
 	{
-		private static readonly string root = "Assets/Fabric/Editor/GUI/Resources/";
-
 		public static Texture2D Load(string resource)
 		{
-			return AssetDatabase.LoadAssetAtPath(root + resource, typeof(Texture2D)) as Texture2D;
+			return Images.Loader.Load (resource);
 		}
 	}
 }
