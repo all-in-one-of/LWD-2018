@@ -17,29 +17,26 @@
 
 using UnityEngine;
 
-public class BHPInmateAI : MonoBehaviour
+public class BHPPrisonerAI : MonoBehaviour
 {
-    private Rigidbody _rigidbody;
+    public Rigidbody Rigidbody;
+    public bool Free;
+    public bool Pooled;
 
     private void Start()
     {
-        _rigidbody = GetComponent<Rigidbody>();
+        Rigidbody = GetComponent<Rigidbody>();
     }
 
-    private void OnCollisionStay(Collision collision)
+    public void LateUpdate()
     {
-        if (!_rigidbody.isKinematic)
-        {
-            foreach (var contact in collision.contacts)
-            {
-                var p = contact.point;
-                p += Random.onUnitSphere;
-                if (transform.position.x > 0)
-                    p += Vector3.left/4;
-                else
-                    p += Vector3.right/4;
-                _rigidbody.AddExplosionForce(250, p, 50);
-            }
-        }
+        if (Pooled) return;
+
+
+        if (Free && Physics.Raycast(transform.position, Vector3.down, 10) && Rigidbody.velocity.x < 2)
+            Rigidbody.AddForce(transform.position.x < 0 ? 1 : -1, 0, 0);
+
+        Free = true;
     }
+
 }

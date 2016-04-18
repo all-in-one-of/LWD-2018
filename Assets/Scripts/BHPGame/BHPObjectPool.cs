@@ -21,7 +21,7 @@ using UnityEngine;
 public class BHPObjectPool : MonoBehaviour
 {
     /// <summary>
-    ///     The list of active inmates
+    ///     The list of active prisoners
     /// </summary>
     public List<GameObject> Active;
 
