@@ -1,15 +1,51 @@
-﻿using UnityEngine;
+﻿// This file is part of Leeuwarden-2018
+// 
+// Copyright (c) 2016 sietze greydanus
+// 
+// Leeuwarden-2018 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3, as
+// published by the Free Software Foundation.
+// 
+// Leeuwarden-2018 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
+// 
+
+using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Counts the score ofthe BHP game
+///     Counts the score ofthe BHP game
 /// </summary>
 public class BHPScoreCounter : MonoBehaviour
 {
+    /// <summary>
+    ///     The amount of prisoners escaped
+    /// </summary>
     private static int _escaped;
+
+    /// <summary>
+    ///     The amount of prisoners not escaped
+    /// </summary>
     private static int _notEscaped;
+
+    /// <summary>
+    ///     True if the game has ended
+    /// </summary>
     private static bool _end;
+
+    /// <summary>
+    ///     The final score
+    /// </summary>
     private GameObject _endScore;
+
+    /// <summary>
+    ///     The text that displays the final score
+    /// </summary>
     private Text _endScoreText;
 
     private int _score;
@@ -44,6 +80,10 @@ public class BHPScoreCounter : MonoBehaviour
         }
     }
 
+    /// <summary>
+    ///     Updates the score.
+    /// </summary>
+    /// <param name="escaped">if set to <c>true</c> [escaped].</param>
     public static void UpdateScore(bool escaped)
     {
         if (_end)

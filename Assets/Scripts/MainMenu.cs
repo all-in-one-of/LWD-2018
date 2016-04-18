@@ -1,4 +1,21 @@
-﻿using System.Collections.Generic;
+﻿// This file is part of Leeuwarden-2018
+// 
+// Copyright (c) 2016 sietze greydanus
+// 
+// Leeuwarden-2018 is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3, as
+// published by the Free Software Foundation.
+// 
+// Leeuwarden-2018 is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
+// 
+
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -6,7 +23,7 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour
 {
     /// <summary>
-    /// The scenes that belong to the locations
+    ///     The scenes that belong to the locations
     /// </summary>
     private readonly Dictionary<string, string> _gameLocations = new Dictionary<string, string>
     {
@@ -15,7 +32,7 @@ public class MainMenu : MonoBehaviour
     };
 
     /// <summary>
-    /// The locations that belong to the coordinates
+    ///     The locations that belong to the coordinates
     /// </summary>
     private readonly Dictionary<Vector2, string> _locations = new Dictionary<Vector2, string>
     {
@@ -85,7 +102,7 @@ public class MainMenu : MonoBehaviour
     }
 
     /// <summary>
-    /// Plays the selected game.
+    ///     Plays the selected game.
     /// </summary>
     public void PlayGame()
     {
@@ -99,7 +116,7 @@ public class MainMenu : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets the clostest location with the specified latitude & longitude.
+    ///     Gets the clostest location with the specified latitude & longitude.
     /// </summary>
     /// <param name="latitude">The latitude.</param>
     /// <param name="longitude">The longitude.</param>
@@ -135,7 +152,7 @@ public class MainMenu : MonoBehaviour
     }
 
     /// <summary>
-    /// Converts realworld to unity coordinates.
+    ///     Converts realworld to unity coordinates.
     /// </summary>
     /// <param name="position">The position.</param>
     /// <returns> A new vector with unity coordinates</returns>

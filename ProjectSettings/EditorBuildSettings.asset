@@ -5,8 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Main.unity
+  - enabled: 1
+    path: Assets/Scenes/MenuTMP.unity
   - enabled: 1
     path: Assets/Scenes/BHPGame.unity
   - enabled: 1
