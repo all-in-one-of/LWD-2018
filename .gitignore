@@ -64,3 +64,5 @@ $RECYCLE.BIN/
 *.lnk
 *.suo
 /.vscode
+
+Assets/StreamingAssets/crashlytics-build.properties
