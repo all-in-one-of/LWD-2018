@@ -17,26 +17,15 @@
 
 using UnityEngine;
 
-public class BHPPrisonerAI : MonoBehaviour
+namespace BHPGame
 {
-    public Rigidbody Rigidbody;
-    public bool Free;
-    public bool Pooled;
-
-    private void Start()
+    public class Test : MonoBehaviour
     {
-        Rigidbody = GetComponent<Rigidbody>();
+        public AnimationClip Clip;
+
+        private void Start()
+        {
+            print(Clip.length);
+        }
     }
-
-    public void LateUpdate()
-    {
-        if (Pooled) return;
-
-
-        if (Free && Physics.Raycast(transform.position, Vector3.down, 10) && Rigidbody.velocity.x < 2)
-            Rigidbody.AddForce(transform.position.x < 0 ? 1 : -1, 0, 0);
-
-        Free = true;
-    }
-
 }

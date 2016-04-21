@@ -325,9 +325,7 @@
 			}
 
 			if (KitUpdateInProgress ()) {
-                
 				if (KitUtils.IsKitInstalled (Settings.Instance.Kit)) {
-                    
 					if (!Update.PeriodicUpdateManager.IsKitUpdateAvailable (kit.Name, kit.Instance.Version ())) {
 						// At this point, the upgrade is done for the given kit. Since this kit was previously
 						// installed, we do not need to go through the flow.

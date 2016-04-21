@@ -10,8 +10,7 @@
 	{
 		public static bool IsKitInstalled(string name)
 		{
-			var found = Settings.Instance.InstalledKits.Find (k => k.Name.ToLower ().Equals (name.ToLower ()));
-			return found != null && found.Installed;
+			return Settings.Instance.InstalledKits.Exists (kit => kit.Name.Equals (name, StringComparison.OrdinalIgnoreCase) && kit.Installed);
 		}
 
 		private static ImportedKit.InstallationStatus ImportedKitInstallationStatus(string name)

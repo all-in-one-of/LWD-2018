@@ -17,35 +17,38 @@
 
 using UnityEngine;
 
-/// <summary>
-/// </summary>
-public class OHBalace : MonoBehaviour
+namespace Oldehoven
 {
     /// <summary>
-    ///     The force that is aplied to the oldehove
     /// </summary>
-    private float _force;
-
-    /// <summary>
-    ///     The rigidbody
-    /// </summary>
-    private Rigidbody _rigidbody;
-
-
-    private void Start()
+    public class Balace : MonoBehaviour
     {
-        _rigidbody = GetComponent<Rigidbody>();
-    }
+        /// <summary>
+        ///     The force that is aplied to the oldehove
+        /// </summary>
+        private float _force;
 
-    private void Update()
-    {
+        /// <summary>
+        ///     The rigidbody
+        /// </summary>
+        private Rigidbody _rigidbody;
+
+
+        private void Start()
+        {
+            _rigidbody = GetComponent<Rigidbody>();
+        }
+
+        private void Update()
+        {
 #if UNITY_EDITOR
-        _force += Input.GetAxis("Mouse X");
-        if (Input.GetMouseButtonDown(0))
-            _rigidbody.isKinematic = !_rigidbody.isKinematic;
+            _force += Input.GetAxis("Mouse X");
+            if (Input.GetMouseButtonDown(0))
+                _rigidbody.isKinematic = !_rigidbody.isKinematic;
 #else
         _force = Input.acceleration.x * 50;
 #endif
-        _rigidbody.AddTorque(new Vector3(0, 0, -_force)*500);
+            _rigidbody.AddTorque(new Vector3(0, 0, -_force)*500);
+        }
     }
 }

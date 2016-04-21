@@ -26,24 +26,17 @@ namespace Fabric.Internal.Editor.Postbuild
 		private static void PrepareProject (string buildPath)
 		{
 			Settings settings = Settings.Instance;
-			
+			string projPath = Path.Combine (buildPath, "Unity-iPhone.xcodeproj/project.pbxproj");
+
 			if (string.IsNullOrEmpty(settings.Organization.ApiKey) || string.IsNullOrEmpty(settings.Organization.BuildSecret)) {
 				Utils.Error ("Unable to find API Key or Build Secret. Fabric was not added to the player.");
 				return;
 			}
-			
-			string projPath = Path.Combine (buildPath, "Unity-iPhone.xcodeproj/project.pbxproj");
-			PBXProject project = new PBXProject();
-			project.ReadFromString(File.ReadAllText(projPath));		
-			string target = project.TargetGuidByName("Unity-iPhone");
-			
-			Utils.Log ("Adding Framework Search Paths to Xcode project");
-			project.AddBuildProperty(target, "FRAMEWORK_SEARCH_PATHS",
-			                         "$(inherited) $(PROJECT_DIR)/Frameworks/" + fabricPluginsPath);
-			
-			File.WriteAllText(projPath, project.WriteToString());
-			
-			AddFabricRunScriptBuildPhase(projPath);
+
+			AddFabricRunScriptBuildPhase (projPath);
+#if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3 || UNITY_4_4 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+			AddFabricFrameworkSearchPath (projPath);
+#endif
 		}
 		
 		private static void PreparePlist (string buildPath)
@@ -52,9 +45,20 @@ namespace Fabric.Internal.Editor.Postbuild
 			AddFabricKitsToPlist(buildPath, kitsDict);
 		}
 
+		private static void AddFabricFrameworkSearchPath (string projPath)
+		{
+			PBXProject project = new PBXProject();
+			project.ReadFromString(File.ReadAllText(projPath));
+			string target = project.TargetGuidByName("Unity-iPhone");
+
+			Utils.Log ("Adding Framework Search Paths to Xcode project");
+			project.AddBuildProperty(target, "FRAMEWORK_SEARCH_PATHS", "$(SRCROOT)/Frameworks/" + fabricPluginsPath);
+
+			File.WriteAllText(projPath, project.WriteToString());
+		}
+
 		private static void AddFabricRunScriptBuildPhase (string projPath)
 		{
-			// Shell Script Build Phase
 			var xcodeProjectLines = File.ReadAllLines (projPath);
 			foreach (var line in xcodeProjectLines) {
 				if (line.Contains("Fabric.framework/run"))

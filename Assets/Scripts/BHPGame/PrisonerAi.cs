@@ -15,23 +15,30 @@
 // along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
 // 
 
-using System.Collections.Generic;
 using UnityEngine;
 
-public class BHPObjectPool : MonoBehaviour
+namespace BHPGame
 {
-    /// <summary>
-    ///     The list of active prisoners
-    /// </summary>
-    public List<GameObject> Active;
+    public class PrisonerAi : MonoBehaviour
+    {
+        public LayerMask LayerMask;
+        [HideInInspector]
+        public bool Pooled;
+        [HideInInspector]
+        public Rigidbody Rigidbody;
 
-    /// <summary>
-    ///     The list of inactive inmates(are placed outside view)
-    /// </summary>
-    public List<GameObject> InActive;
+        private void Start()
+        {
+            Rigidbody = GetComponent<Rigidbody>();
+        }
 
-    /// <summary>
-    ///     Amount of time spawned
-    /// </summary>
-    public int Spawns;
+        public void Update()
+        {
+            if (Pooled) return;
+
+            if (Physics.Raycast(transform.position, Vector2.down, 1, LayerMask) &&
+                Rigidbody.velocity.magnitude < 2)
+                Rigidbody.AddForce(transform.position.x > 0 ? 100 : -100, 0, 0);
+        }
+    }
 }

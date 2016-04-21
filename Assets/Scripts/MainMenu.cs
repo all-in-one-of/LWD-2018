@@ -49,7 +49,7 @@ public class MainMenu : MonoBehaviour
     private string _closestLocation;
 
     private float _timer;
-    public GameObject obj;
+    public GameObject Obj;
     public GameObject PlayGameButton;
     public Text Text;
 
@@ -62,9 +62,10 @@ public class MainMenu : MonoBehaviour
             var o =
                 Instantiate(Resources.Load("Place"), ToUnityCoordinates(location.Key), Quaternion.identity) as
                     GameObject;
-            o.GetComponent<TextMesh>().text = location.Value.Length < 7
-                ? location.Value.Substring(0, 7)
-                : location.Value;
+            if (o != null)
+                o.GetComponent<TextMesh>().text = location.Value.Length < 7
+                    ? location.Value.Substring(0, 7)
+                    : location.Value;
         }
         Text.text = "Start";
 
@@ -95,7 +96,7 @@ public class MainMenu : MonoBehaviour
             else
             {
                 Closest(Input.location.lastData.latitude, Input.location.lastData.longitude);
-                obj.transform.position = ToUnityCoordinates(new Vector2(Input.location.lastData.latitude,
+                Obj.transform.position = ToUnityCoordinates(new Vector2(Input.location.lastData.latitude,
                     Input.location.lastData.longitude));
             }
         }
