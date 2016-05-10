@@ -1,12 +1,13 @@
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.IO;
+using System.Linq;
+using System;
+
+
 namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
 {
-	using System.Collections.Generic;
-	using System.Text.RegularExpressions;
-	using System.IO;
-	using System.Linq;
-	using System;
-		
-	enum TokenType
+    enum TokenType
     {
         EOF,
         Invalid,
@@ -208,7 +209,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         
         bool IsOperator(char ch)
         {
-            if (";,=(){}".Contains(ch))
+            if (ch == ';' || ch == ',' || ch == '=' || ch == '(' || ch == ')' || ch == '{' || ch == '}')
                 return true;
             return false;
         }

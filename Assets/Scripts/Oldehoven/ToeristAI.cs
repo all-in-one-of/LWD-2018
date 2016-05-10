@@ -23,7 +23,7 @@ namespace Oldehoven
     /// <summary>
     ///     The AI for the toeristen;
     /// </summary>
-    public class ToeristAi : MonoBehaviour
+    public class ToeristAI : MonoBehaviour
     {
         private Animator _animator;
 

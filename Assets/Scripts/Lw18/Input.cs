@@ -19,7 +19,7 @@
 using System;
 using UnityEngine;
 
-namespace BHPGame
+namespace Lw18
 {
     /// <summary>
     ///     Class for multiplatform input.

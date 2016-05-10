@@ -3,10 +3,11 @@
 	using UnityEngine;
 	using UnityEditor;
 	using System;
-	using System.Net;
 	using System.Collections;
 	using System.Collections.Generic;
 	using System.IO;
+	using System.Globalization;
+	using System.Net;
 	using System.Timers;
 	using Fabric.Internal.Editor.Model;
 	using Fabric.Internal.Editor.View;
@@ -38,6 +39,91 @@
 		}
 		private Update.FabricInstaller fabricInstaller = new FabricInstaller (LatestPluginConfig);
 
+		private KitInstallationChecker kitInstallationChecker;
+		private float nextKitInstallationCheck = 0f;
+		private const float kitInstallCheckDelay = 10.0f;
+		private const string ConfiguredTimestampKey = "ConfiguredTimestamp";
+
+		// This is intended to be called in the GUI loop.
+		public void ActivationCheck()
+		{
+			bool isTimeToCheck = Time.realtimeSinceStartup > nextKitInstallationCheck;
+			if (kitInstallationChecker != null || !isTimeToCheck) {
+				return; // We're currently checking.
+			}
+
+			string organization = Settings.Instance.Organization.Name;
+			string bundleIdentifier = PlayerSettings.bundleIdentifier;
+			BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
+
+			kitInstallationChecker = new KitInstallationChecker ();
+			kitInstallationChecker.CheckInstalledKits (organization, bundleIdentifier, buildTarget, (activatedApp) => {
+				if (activatedApp == null) {
+					ResetKitInstallationChecker ();
+					return;
+				}
+
+				HashSet<string> installedKitNames = new HashSet<string> (
+					activatedApp.SdkKits.ConvertAll (kit => kit.Name), StringComparer.OrdinalIgnoreCase
+				);
+
+				SendKitsAnalytics (installedKitNames);
+
+				MarkKitsAsInstalled(installedKitNames);
+				Settings.Instance.IconUrl = activatedApp.IconUrl;
+				Settings.Instance.DashboardUrl = activatedApp.DashboardUrl;
+
+				ResetKitInstallationChecker ();
+			}, (Exception exception) => {
+				Utils.Warn ("Failed checking for kit installation: {0}", exception.Message);
+				ResetKitInstallationChecker ();
+			}, (Exception noNetwork) => {
+				ResetKitInstallationChecker ();
+			});
+		}
+
+		private static void SendKitsAnalytics(HashSet<string> installedKitNames)
+		{
+			HashSet<string> configuredKitNames = new HashSet<string> (
+				Settings.Instance.InstalledKits
+				.FindAll (kit => kit.InstallationStatus == Settings.KitInstallationStatus.Configured)
+				.ConvertAll (kit => kit.Name), StringComparer.OrdinalIgnoreCase
+			);
+
+			DateTime now = DateTime.UtcNow;
+
+			foreach (string installedKitName in installedKitNames) {
+				if (configuredKitNames.Contains (installedKitName)) {
+					SendKitAnalytics (now, installedKitName);
+				}
+			}
+		}
+
+		private static void SendKitAnalytics(DateTime now, string installedKitName)
+		{
+			Settings.InstalledKit.MetaTuple timestampTuple = Settings.Instance.InstalledKits
+				.Find (k => k.Name.Equals (installedKitName, StringComparison.OrdinalIgnoreCase)).Meta
+				.Find (tuple => tuple.Key.Equals (ConfiguredTimestampKey));
+
+			if (timestampTuple == null) {
+				return;
+			}
+
+			double configuredTimestampSeconds = Double.Parse (timestampTuple.Value, CultureInfo.InvariantCulture);
+
+			Update.PeriodicPinger.Enqueue (Analytics.TimeBucket.From (
+				Detail.TimeUtils.FromEpochSeconds (configuredTimestampSeconds),
+				now,
+				installedKitName
+			));
+		}
+
+		private void ResetKitInstallationChecker()
+		{
+			kitInstallationChecker = null;
+			nextKitInstallationCheck = Time.realtimeSinceStartup + kitInstallCheckDelay;
+		}
+
 		private string password;
 		
 		private Page login;
@@ -49,9 +135,6 @@
 		
 		public enum LoginStatus { Unknown, Success, Unauthorized, Other };
 		public delegate void LoginAction<T, U>(T password, out U status);
-		
-		public enum ActivationStatus { Activated, Checking, TimedOut, RefreshRequired, Unknown };
-		private volatile ActivationStatus activationStatus = ActivationStatus.Unknown;
 		
 		private ImportedKit kit;
 
@@ -89,12 +172,12 @@
 		{
 			login = new LoginPage (Login ());
 			orgs = new OrganizationsPage (SelectOrganization (), FetchOrganizationsAsync);
-			validation = new ValidationPage (QueryForActivation (), ResetActivationStatus ());
+			validation = new ValidationPage (BackToKitSelection, SetSelectedKitConfigured);
 			kitSelection = new KitSelectionPage (
 				ListAvailableKits,
 				KitUtils.ListImportedKits (Api),
-				DisplayedKitStatusAndVersion,
 				SelectKit (),
+				ActivationCheck,
 				BackToOrganizations (),
 				Update.PeriodicUpdateManager.IsPluginUpdateAvailable,
 				ShowUpdatePage (() => { return LatestPluginConfig; }, UpdateFlow.Plugin)
@@ -139,6 +222,9 @@
 
 		private void BackToKitSelection()
 		{
+			Update.PeriodicPinger.Enqueue (new Analytics.Events.PageViewEvent {
+				ScreenName = "KitSelectionPage",
+			});
 			Settings.Instance.FlowSequence = 0;
 			Settings.Instance.Kit = null;
 		}
@@ -150,6 +236,8 @@
 			Func<bool> isCancelled
 		)
 		{
+			Update.PeriodicPinger.Enqueue (new Analytics.Events.UpdateTakenEvent (KitUtils.AnalyticsStateString ()));
+
 			fabricInstaller.DownloadAndInstallPackage (
 				new FabricInstaller.ReportInstallProgress (reportProgress),
 				new FabricInstaller.DownloadComplete (downloadComplete),
@@ -166,60 +254,6 @@
 			});
 		}
 		
-		#region ResetActivationStatus
-		public Action ResetActivationStatus()
-		{
-			return delegate() {
-				activationStatus = ActivationStatus.Unknown;
-			};
-		}
-		#endregion
-		
-		#region QueryForActivation
-
-		private void ActivationSuccessful(App activatedApp)
-		{
-			iconUrl = activatedApp.IconUrl;
-			dashboardUrl = activatedApp.DashboardUrl;
-			activationStatus = ActivationStatus.Activated;
-		}
-
-		private void ActivationTimedOut(string message)
-		{
-			activationStatus = ActivationStatus.TimedOut;
-		}
-
-		public Func<ActivationStatus> QueryForActivation()
-		{
-			return delegate() {
-				if (activationStatus == ActivationStatus.Unknown) {
-					activationStatus = ActivationStatus.Checking;
-
-					string bundleIdentifier = PlayerSettings.bundleIdentifier;
-					string organization = Settings.Instance.Organization.Name;
-					BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
-
-					API.AsyncV1.Fetch<App> (600, new TimeSpan (0, 0, 10), ActivationSuccessful, ActivationTimedOut, (API.V1 api) => {
-						foreach (App app in api.ApplicationsFor (organization, api.Organizations ())) {
-							bool matchesBundleId = app.BundleIdentifier.Equals (bundleIdentifier, StringComparison.OrdinalIgnoreCase);
-							bool matchesSdk = app.SdkKits.Exists (k => k.Name.Equals (kit.Name, StringComparison.OrdinalIgnoreCase));
-							bool matchesPlatform = app.Platform == buildTarget;
-
-							if (matchesBundleId && matchesSdk && matchesPlatform) {
-								return app;
-							}
-						}
-
-						throw new API.V1.ApiException ("");
-					});
-				}
-
-				return activationStatus;
-			};
-		}
-
-		#endregion
-		
 		#region PageFromState
 
 		private static bool NoAuthToken()
@@ -230,25 +264,6 @@
 		private static bool NoOrganizationSelected()
 		{
 			return Settings.Instance.Organization == null || String.IsNullOrEmpty (Settings.Instance.Organization.Name);
-		}
-
-		private bool KitIsActivated()
-		{
-			return activationStatus == ActivationStatus.Activated;
-		}
-
-		private void MarkKitAsInstalled()
-		{
-			Settings.Instance.Kit = null;
-			Settings.InstalledKit installed = Settings.Instance.InstalledKits.Find (k => k.Name.Equals (kit.Name));
-			installed.Installed = true;
-			installed.Enabled = true;
-			
-			Settings.Instance.IconUrl = iconUrl;
-			Settings.Instance.DashboardUrl = dashboardUrl;
-			Settings.Instance.FlowSequence = 0;
-			
-			activationStatus = ActivationStatus.Unknown;
 		}
 
 		private bool NoKitSelected()
@@ -306,16 +321,14 @@
 
 		public Page PageFromState()
 		{
+			UpdateInstalledKitStatus ();
+
 			if (NoAuthToken ()) {
 				return login;
 			}
 			
 			if (NoOrganizationSelected ()) {
 				return orgs;
-			}
-
-			if (KitIsActivated ()) {
-				MarkKitAsInstalled ();
 			}
 
 			RecreateKitInstance ();
@@ -357,7 +370,12 @@
 				Settings.Instance.FlowSequence = 0;
 				return kitSelection;
 			}
-			
+
+			// At this point, the kit is selected. If it does not exist in the installed kits list,
+			// add it.
+
+			AddKitToKitsList (kit.Name);
+
 			Page page = null;
 			KitControllerStatus status = kit.Instance.PageFromState (out page);
 			
@@ -372,6 +390,24 @@
 			}
 
 			return kitSelection;
+		}
+
+		private static void AddKitToKitsList(string name)
+		{
+			List<Settings.InstalledKit> installedKits = Settings.Instance.InstalledKits;
+
+			if (installedKits.Exists (
+				k => k.Name.Equals (name, StringComparison.OrdinalIgnoreCase)
+			)) {
+				return;
+			}
+
+			installedKits.Add (new Settings.InstalledKit {
+				Name = name,
+				InstallationStatus = Settings.KitInstallationStatus.Imported,
+				Installed = false,
+				Enabled = false
+			});
 		}
 
 		#endregion
@@ -423,6 +459,9 @@
 		private static Action<Organization> SelectOrganization()
 		{
 			return delegate(Organization organization) {
+				Update.PeriodicPinger.Enqueue (new Analytics.Events.PageViewEvent {
+					ScreenName = "KitSelectionPage",
+				});
 				Settings.Instance.FlowSequence = 0;
 				Settings.Instance.Organization = organization;
 			};
@@ -440,43 +479,37 @@
 		#endregion
 		
 		#region SelecKit
-		private Action<KitsObject, ImportedKit, DisplayedKitStatus> SelectKit()
+		private Action<KitsObject, ImportedKit> SelectKit()
 		{
-			return delegate(KitsObject availableKit, ImportedKit importedKit, DisplayedKitStatus status) {
-				string kitName = importedKit != null ? importedKit.Name : availableKit.Name;
-
-				if (Update.PeriodicUpdateManager.IsPluginUpdateRequired (kitName)) {
+			return delegate(KitsObject availableKit, ImportedKit importedKit) {
+				if (Update.PeriodicUpdateManager.IsPluginUpdateRequired (availableKit.Name)) {
 					EditorUtility.DisplayDialog (
 						"A plugin update is required",
-						kitName + " requires a newer version of the Fabric Plugin, please update by clicking 'View Update'.",
+						availableKit.Name + " requires a newer version of the Fabric Plugin, please update by clicking 'View Update'.",
 						"OK"
 					);
 					return;
 				}
 
-				if (importedKit != null) {
-					// If the latest version of a kit is installed, or the latest version is imported into the project,
-					// start the normal kit flow.
-					if (status == DisplayedKitStatus.Installed || importedKit.Instance.Version () == new System.Version (availableKit.Version)) {
-						Settings.Instance.FlowSequence = 0;
-						Settings.Instance.Kit = importedKit.Name;
-						this.kit = importedKit;
-						return;
-					}
+				Settings.Instance.Kit = availableKit.Name;
+
+				if (importedKit != null && KitUtils.IsUpToDate(availableKit, importedKit)) {
+					// Delegate to the kit's controller.
+					this.kit = importedKit;
+					Settings.Instance.FlowSequence = 0;
+					return;
 				}
 
-				// Kit is imported, but not at the latest version, or the kit is not imported. This means
-				// we need to download the newest version.
+				// We need to download the latest version of the kit, because it's either not imported or needs updating.
+
+				this.kit = null;
+				Settings.Instance.FlowSequence = (int)UpdateFlow.Kit;
+
 				FabricInstaller.Config config = new FabricInstaller.Config (
 					availableKit.PackageUrl,
 					availableKit.PackageName,
 					availableKit.ReleaseNotesUrl
 				);
-
-				kit = null;
-
-				Settings.Instance.FlowSequence = (int)UpdateFlow.Kit;
-				Settings.Instance.Kit = kitName;
 
 				List<string> kitsToUpdateDueToDependencies = Update.PeriodicUpdateManager.Resolve (Settings.Instance.Kit);
 
@@ -491,26 +524,50 @@
 		}
 		#endregion
 
-		#region DisplayedKitStatusAndVersion
-		private static KeyValuePair<DisplayedKitStatus, Version> DisplayedKitStatusAndVersion(KitsObject kit, ImportedKit imported)
+		// This will properly set kit installation status in the case that
+		// the kit was installed before KitInstallationStatus was added
+		private static void UpdateInstalledKitStatus()
 		{
-			DisplayedKitStatus kitStatus = DisplayedKitStatus.NotInstalled;
-			System.Version kitVersion = new System.Version (kit.Version);
-			
-			if (imported != null && imported.Status == ImportedKit.InstallationStatus.Installed) {
-				kitVersion = imported.Instance.Version ();
-				kitStatus = kitVersion < new System.Version (kit.Version) ? DisplayedKitStatus.UpgradeAvailable : DisplayedKitStatus.Installed;
-			}
-
-			return new KeyValuePair<DisplayedKitStatus, Version> (kitStatus, kitVersion);
+			Settings.Instance.InstalledKits.ForEach (kit => {
+				if (kit.Installed) {
+					kit.InstallationStatus = Settings.KitInstallationStatus.Installed;
+				}
+			});
 		}
-		#endregion
 
-		#region ListAvailableKits
+		private void SetSelectedKitConfigured()
+		{
+			string selectedKit = Settings.Instance.Kit;
+			if (String.IsNullOrEmpty (selectedKit)) {
+				return;
+			}
+			Settings.InstalledKit installedKit = Settings.Instance.InstalledKits.Find (kit => kit.Name.Equals (selectedKit, StringComparison.OrdinalIgnoreCase));
+			if (installedKit == null) {
+				return;
+			}
+			installedKit.InstallationStatus = Settings.KitInstallationStatus.Configured;
+
+			installedKit.Meta.RemoveAll (tuple => tuple.Key.Equals (ConfiguredTimestampKey, StringComparison.OrdinalIgnoreCase));
+			installedKit.Meta.Add (new Settings.InstalledKit.MetaTuple {
+				Key = ConfiguredTimestampKey,
+				Value = Detail.TimeUtils.SecondsSinceEpoch.ToString ("R", CultureInfo.InvariantCulture),
+			});
+		}
+
 		public KitsList ListAvailableKits()
 		{
 			return Update.PeriodicUpdateManager.LatestAvailableKitsVersions ();
 		}
-		#endregion
+
+		private static void MarkKitsAsInstalled(HashSet<string> kitsToMark)
+		{
+			Settings.Instance.InstalledKits.ForEach (kit => {
+				if (kitsToMark.Contains (kit.Name)) {
+					kit.InstallationStatus = Settings.KitInstallationStatus.Installed;
+					kit.Installed = true;
+					kit.Enabled = true;
+				}
+			});
+		}
 	}
 }

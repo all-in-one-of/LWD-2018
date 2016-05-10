@@ -45,6 +45,17 @@
 
 		private IEnumerator coroutine;
 
+		// Run a single task only once.
+		public AsyncTaskRunner (DoInBackground doInBackground, OnWorkCompleted onWorkCompleted, OnError onError) {
+			this.status = Status.Idle;
+			this.doInBackground = doInBackground;
+			this.onWorkCompleted = onWorkCompleted;
+			this.onError = onError;
+			this.retryCountRemaining = 0;
+			this.retryCount = 1;
+			this.retryDelay = new System.TimeSpan(0, 0, 0);
+		}
+
 		public AsyncTaskRunner(uint retryCount, System.TimeSpan retryDelay, DoInBackground doInBackground, OnWorkCompleted onWorkCompleted, OnError onError)
 		{
 			this.status = Status.Idle;

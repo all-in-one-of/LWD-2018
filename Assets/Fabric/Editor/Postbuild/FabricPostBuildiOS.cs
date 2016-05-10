@@ -42,7 +42,42 @@ namespace Fabric.Internal.Editor.Postbuild
 		private static void PreparePlist (string buildPath)
 		{
 			Dictionary<string, PlistElementDict> kitsDict = new Dictionary<string, PlistElementDict>();			
-			AddFabricKitsToPlist(buildPath, kitsDict);
+			AddFabricKitsToPlist (buildPath, kitsDict);
+			SetInitializationTypePlistFlag (buildPath);
+			SetInitializationPlistKitsList (buildPath);
+		}
+
+		private static void ModifyFabricPlistElement(string buildPath, System.Action<PlistElementDict> modify)
+		{
+			string plistPath = Path.Combine (buildPath, "Info.plist");
+
+			PlistDocument plist = new PlistDocument ();
+			plist.ReadFromFile (plistPath);
+
+			PlistElementDict rootDict = plist.root.AsDict ();
+			PlistElementDict fabric = (PlistElementDict)rootDict ["Fabric"] ?? plist.root.CreateDict ("Fabric");
+
+			modify (fabric);
+
+			plist.WriteToFile (plistPath);
+		}
+
+		private static void SetInitializationTypePlistFlag(string buildPath)
+		{
+			ModifyFabricPlistElement (buildPath, delegate(PlistElementDict obj) {
+				obj.SetString ("InitializationType", Settings.Instance.Initialization.ToString ());
+			});
+		}
+
+		private static void SetInitializationPlistKitsList(string buildPath)
+		{
+			if (Settings.Instance.Initialization == Settings.InitializationType.Automatic || Settings.Instance.InstalledKits.Count == 0) {
+				return;
+			}
+
+			ModifyFabricPlistElement (buildPath, delegate(PlistElementDict obj) {
+				obj.SetString ("InitializationKitsList", CommonBuild.FabricCommonBuild.InitializationKitsList ());
+			});
 		}
 
 		private static void AddFabricFrameworkSearchPath (string projPath)

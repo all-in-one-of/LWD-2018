@@ -1,15 +1,59 @@
-﻿namespace Fabric.Internal {
-	using System.Runtime.InteropServices;
+﻿namespace Fabric.Runtime
+{
+	using System.Collections.Generic;
+	using System;
+	using System.Reflection;
 
-	public class FabricSymbolLinker {
-		// Referencing this noop function here is required in order for our Fabric 
-		// Objective-C lib to be linked. Without it the lib won't get linked (the linker
-		// will ignore the lib since none of its symbols are referenced by the app) and hence 
-		// the initialization hooks won't get triggered.
-#if UNITY_IOS && !UNITY_EDITOR
-		[DllImport("__Internal")]
-		private static extern void fabric_symbol_for_linker();
-#endif
+	public class Fabric
+	{
+		private static readonly Internal.Impl impl;
+
+		static Fabric()
+		{
+			impl = Internal.Impl.Make ();
+		}
+
+		public static void Initialize()
+		{
+			string kitsToInitialize = impl.Initialize ();
+			if (String.IsNullOrEmpty (kitsToInitialize)) {
+				return;
+			}
+
+			string[] pairs = kitsToInitialize.Split (',');
+
+			foreach (string kitMethod in pairs) {
+				Initialize (kitMethod);
+			}
+		}
+
+		internal static void Initialize(string kitMethod)
+		{
+			int separator = kitMethod.LastIndexOf ('.');
+
+			string clazz = kitMethod.Substring (0, separator);
+			string method = kitMethod.Substring (separator + 1);
+
+			Type type = Type.GetType (clazz);
+			if (type == null) {
+				return;
+			}
+
+			// First, try to get the init method as public-static. If that doesn't work, try as private-static.
+			MethodInfo initialize = type.GetMethod (method, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			if (initialize == null) {
+				return;
+			}
+
+			object instance = typeof(UnityEngine.ScriptableObject).IsAssignableFrom (type) ?
+				UnityEngine.ScriptableObject.CreateInstance (type) :
+				Activator.CreateInstance (type);
+
+			if (instance == null) {
+				return;
+			}
+
+			initialize.Invoke (instance, new object[] {});
+		}
 	}
-
 }

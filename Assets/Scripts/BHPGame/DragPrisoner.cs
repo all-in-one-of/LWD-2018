@@ -16,6 +16,7 @@
 // 
 
 using UnityEngine;
+using Input = Lw18.Input;
 
 namespace BHPGame
 {

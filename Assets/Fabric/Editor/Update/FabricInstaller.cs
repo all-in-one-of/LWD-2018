@@ -55,7 +55,9 @@
 
 			try {
 				if (config.ReleaseNotesUrl != null) {
-					releaseNotes = webClient.DownloadString (config.ReleaseNotesUrl);
+					releaseNotes = Net.Validator.MakeRequest (() => {
+						return webClient.DownloadString (config.ReleaseNotesUrl);
+					});
 					return releaseNotes;
 				}
 			} catch (System.Exception e) {

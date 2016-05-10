@@ -1,10 +1,12 @@
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.IO;
+using System.Linq;
+using System;
+
+
 namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
 {   
-	using System.Collections.Generic;
-	using System.Text.RegularExpressions;
-	using System.IO;
-	using System.Linq;
-	using System;
 
     class ValueAST {}
 

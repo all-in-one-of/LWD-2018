@@ -20,10 +20,12 @@ MonoBehaviour:
     BuildSecret: 4f865a2bf3076d1a3edc7e72cbccaa47cd1be5d0912d528d2cfcffd13e8caa26
   iconUrl: https://s3.amazonaws.com/assets.crashlytics.com/production/project/5068257/build_version/36842654/icon/20916365/icon.png
   dashboardUrl: https://www.fabric.io/anothergamecompany/android/apps/com.anotherfoxguy.lwrd18
+  initialization: 0
   flowSequence: 0
   kit: 
   installedKits:
   - Name: Crashlytics
+    InstallationStatus: 2
     Installed: 1
     Enabled: 1
     Meta: []

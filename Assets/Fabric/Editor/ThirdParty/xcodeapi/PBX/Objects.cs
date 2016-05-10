@@ -1,109 +1,14 @@
+using System.Collections.Generic;
+using System.Collections;
+using System.Text.RegularExpressions;
+using System.IO;
+using System.Linq;
+using System;
+
+
 namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
 {
-	using System.Collections.Generic;
-	using System.Collections;
-	using System.Text.RegularExpressions;
-	using System.IO;
-	using System.Linq;
-	using System;
-
-    class PBXElement
-    {
-        protected PBXElement() {}
-        
-        // convenience methods
-        public string AsString() { return ((PBXElementString)this).value; }
-        public PBXElementArray AsArray() { return (PBXElementArray)this; }
-        public PBXElementDict AsDict()   { return (PBXElementDict)this; }
-        
-        public PBXElement this[string key]
-        {
-            get { return AsDict()[key]; }
-            set { AsDict()[key] = value; }
-        }
-    }
-    
-    class PBXElementString : PBXElement
-    {
-        public PBXElementString(string v) { value = v; }
-        
-        public string value;
-    }
-
-    class PBXElementDict : PBXElement
-    {
-        public PBXElementDict() : base() {}
-        
-        private SortedDictionary<string, PBXElement> m_PrivateValue = new SortedDictionary<string, PBXElement>();
-        public IDictionary<string, PBXElement> values { get { return m_PrivateValue; }}
-        
-        new public PBXElement this[string key]
-        {
-            get {
-                if (values.ContainsKey(key))
-                    return values[key];
-                return null;
-            }
-            set { this.values[key] = value; }
-        }
-        
-        public bool Contains(string key)
-        {
-            return values.ContainsKey(key);
-        }
-        
-        public void Remove(string key)
-        {
-            values.Remove(key);
-        }
-
-        public void SetString(string key, string val)
-        {
-            values[key] = new PBXElementString(val);
-        }
-        
-        public PBXElementArray CreateArray(string key)
-        {
-            var v = new PBXElementArray();
-            values[key] = v;
-            return v;
-        }
-        
-        public PBXElementDict CreateDict(string key)
-        {
-            var v = new PBXElementDict();
-            values[key] = v;
-            return v;
-        }
-    }
-    
-    class PBXElementArray : PBXElement
-    {
-        public PBXElementArray() : base() {}
-        public List<PBXElement> values = new List<PBXElement>();
-        
-        // convenience methods
-        public void AddString(string val)
-        {
-            values.Add(new PBXElementString(val));
-        }
-        
-        public PBXElementArray AddArray()
-        {
-            var v = new PBXElementArray();
-            values.Add(v);
-            return v;
-        }
-        
-        public PBXElementDict AddDict()
-        {
-            var v = new PBXElementDict();
-            values.Add(v);
-            return v;
-        }
-    }
-
-    internal class PBXObject
+    internal class PBXObjectData
     {   
         public string guid;
         protected PBXElementDict m_Properties = new PBXElementDict();
@@ -168,11 +73,12 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         public virtual void UpdateVars() {}       // Updates the cached variables from underlying props
     }
     
-    internal class PBXBuildFile : PBXObject
+    internal class PBXBuildFileData : PBXObjectData
     {
         public string fileRef;
         public string compileFlags;
         public bool weak;
+        public List<string> assetTags;
         
         private static PropertyCommentChecker checkerData = new PropertyCommentChecker(new string[]{
             "fileRef/*"
@@ -180,41 +86,48 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         internal override PropertyCommentChecker checker { get { return checkerData; } }
         internal override bool shouldCompact { get { return true; } }
         
-        public static PBXBuildFile CreateFromFile(string fileRefGUID, bool weak,
-                                                  string compileFlags)
+        public static PBXBuildFileData CreateFromFile(string fileRefGUID, bool weak,
+                                                      string compileFlags)
         {
-            PBXBuildFile buildFile = new PBXBuildFile();
+            PBXBuildFileData buildFile = new PBXBuildFileData();
             buildFile.guid = PBXGUID.Generate();
             buildFile.SetPropertyString("isa", "PBXBuildFile");
             buildFile.fileRef = fileRefGUID;
             buildFile.compileFlags = compileFlags;
             buildFile.weak = weak;
+            buildFile.assetTags = new List<string>();
             return buildFile;
-        }
-        
-        PBXElementDict GetSettingsDict()
-        {
-            if (m_Properties.Contains("settings"))
-                return m_Properties["settings"].AsDict();
-            else
-                return m_Properties.CreateDict("settings");        
         }
         
         public override void UpdateProps()
         {
             SetPropertyString("fileRef", fileRef);
+
+            PBXElementDict settings = null;
+            if (m_Properties.Contains("settings"))
+                settings = m_Properties["settings"].AsDict();
+            
             if (compileFlags != null && compileFlags != "")
             {
-                GetSettingsDict().SetString("COMPILER_FLAGS", compileFlags);
+                if (settings == null)
+                    settings = m_Properties.CreateDict("settings");
+                settings.SetString("COMPILER_FLAGS", compileFlags);
             }
+            else
+            {
+                if (settings != null)
+                    settings.Remove("COMPILER_FLAGS");
+            }
+
             if (weak)
             {
-                var dict = GetSettingsDict();
+                if (settings == null)
+                    settings = m_Properties.CreateDict("settings");
                 PBXElementArray attrs = null;
-                if (dict.Contains("ATTRIBUTES"))
-                    attrs = dict["ATTRIBUTES"].AsArray();
+                if (settings.Contains("ATTRIBUTES"))
+                    attrs = settings["ATTRIBUTES"].AsArray();
                 else
-                    attrs = dict.CreateArray("ATTRIBUTES");
+                    attrs = settings.CreateArray("ATTRIBUTES");
                     
                 bool exists = false;
                 foreach (var value in attrs.values)
@@ -225,6 +138,33 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
                 if (!exists)
                     attrs.AddString("Weak");
             }
+            else
+            {
+                if (settings != null && settings.Contains("ATTRIBUTES"))
+                {
+                    var attrs = settings["ATTRIBUTES"].AsArray();
+                    attrs.values.RemoveAll(el => (el is PBXElementString && el.AsString() == "Weak"));
+                    if (attrs.values.Count == 0)
+                        settings.Remove("ATTRIBUTES");
+                }
+            }
+            
+            if (assetTags.Count > 0)
+            {
+                if (settings == null)
+                    settings = m_Properties.CreateDict("settings");
+                var tagsArray = settings.CreateArray("ASSET_TAGS");
+                foreach (string tag in assetTags)
+                    tagsArray.AddString(tag);
+            }
+            else
+            {
+                if (settings != null)
+                    settings.Remove("ASSET_TAGS");
+            }
+            
+            if (settings != null && settings.values.Count == 0)
+                m_Properties.Remove("settings");
         }
 
         public override void UpdateVars()
@@ -232,6 +172,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
             fileRef = GetPropertyString("fileRef");
             compileFlags = null;
             weak = false;
+            assetTags = new List<string>();
             if (m_Properties.Contains("settings"))
             {
                 var dict = m_Properties["settings"].AsDict();
@@ -247,24 +188,43 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
                             weak = true;
                     }
                 }
+                if (dict.Contains("ASSET_TAGS"))
+                {
+                    var tags = dict["ASSET_TAGS"].AsArray();
+                    foreach (var value in tags.values)
+                        assetTags.Add(value.AsString());
+                }
             }
         }
     }
     
-    internal class PBXFileReference : PBXObject
+    internal class PBXFileReferenceData : PBXObjectData
     {
-        public string path;
+        string m_Path = null;
+        string m_ExplicitFileType = null;
+        string m_LastKnownFileType = null;
+        
+        public string path 
+        { 
+            get { return m_Path; } 
+            set { m_ExplicitFileType = null; m_LastKnownFileType = null; m_Path = value; } 
+        }
+
         public string name;
         public PBXSourceTree tree;
+        public bool isFolderReference 
+        { 
+            get { return m_LastKnownFileType != null && m_LastKnownFileType == "folder"; } 
+        }
         
         internal override bool shouldCompact { get { return true; } }
         
-        public static PBXFileReference CreateFromFile(string path, string projectFileName,
-                                                      PBXSourceTree tree)
+        public static PBXFileReferenceData CreateFromFile(string path, string projectFileName,
+                                                          PBXSourceTree tree)
         {
             string guid = PBXGUID.Generate();
             
-            PBXFileReference fileRef = new PBXFileReference();
+            PBXFileReferenceData fileRef = new PBXFileReferenceData();
             fileRef.SetPropertyString("isa", "PBXFileReference");
             fileRef.guid = guid;
             fileRef.path = path;
@@ -273,39 +233,57 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
             return fileRef;
         }
         
+        public static PBXFileReferenceData CreateFromFolderReference(string path, string projectFileName,
+                                                                     PBXSourceTree tree)
+        {
+            var fileRef = CreateFromFile(path, projectFileName, tree);
+            fileRef.m_LastKnownFileType = "folder";
+            return fileRef;
+        }
+        
         public override void UpdateProps()
         {
             string ext = null;
-            if (name != null) 
-                ext = Path.GetExtension(name);
-            else if (path != null)
-                ext = Path.GetExtension(path);
-            if (ext != null)
+            if (m_ExplicitFileType != null)
+                SetPropertyString("explicitFileType", m_ExplicitFileType);
+            else if (m_LastKnownFileType != null)
+                SetPropertyString("lastKnownFileType", m_LastKnownFileType);
+            else
             {
-                if (FileTypeUtils.IsFileTypeExplicit(ext))
-                    SetPropertyString("explicitFileType", FileTypeUtils.GetTypeName(ext));
-                else
-                    SetPropertyString("lastKnownFileType", FileTypeUtils.GetTypeName(ext));
+                if (name != null) 
+                    ext = Path.GetExtension(name);
+                else if (m_Path != null)
+                    ext = Path.GetExtension(m_Path);
+                if (ext != null)
+                {
+                    if (FileTypeUtils.IsFileTypeExplicit(ext))
+                        SetPropertyString("explicitFileType", FileTypeUtils.GetTypeName(ext));
+                    else
+                        SetPropertyString("lastKnownFileType", FileTypeUtils.GetTypeName(ext));
+                }
             }
-            if (path == name)
+            if (m_Path == name)
                 SetPropertyString("name", null);
             else
                 SetPropertyString("name", name);
-            if (path == null)
+            if (m_Path == null)
                 SetPropertyString("path", "");
             else
-                SetPropertyString("path", path);
+                SetPropertyString("path", m_Path);
             SetPropertyString("sourceTree", FileTypeUtils.SourceTreeDesc(tree));
         }
+
         public override void UpdateVars()
         {
             name = GetPropertyString("name");
-            path = GetPropertyString("path");
+            m_Path = GetPropertyString("path");
             if (name == null)
-                name = path;
-            if (path == null)
-                path = "";
+                name = m_Path;
+            if (m_Path == null)
+                m_Path = "";
             tree = FileTypeUtils.ParseSourceTree(GetPropertyString("sourceTree"));
+            m_ExplicitFileType = GetPropertyString("explicitFileType");
+            m_LastKnownFileType = GetPropertyString("lastKnownFileType");
         }
     }
 
@@ -331,7 +309,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         IEnumerator IEnumerable.GetEnumerator() { return m_List.GetEnumerator(); }
     }
 
-    internal class XCConfigurationList : PBXObject
+    internal class XCConfigurationListData : PBXObjectData
     {
         public GUIDList buildConfigs;
 
@@ -340,9 +318,9 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         });
         internal override PropertyCommentChecker checker { get { return checkerData; } }
         
-        public static XCConfigurationList Create()
+        public static XCConfigurationListData Create()
         {
-            var res = new XCConfigurationList();
+            var res = new XCConfigurationListData();
             res.guid = PBXGUID.Generate();
 
             res.SetPropertyString("isa", "XCConfigurationList");
@@ -362,7 +340,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXGroup : PBXObject
+    internal class PBXGroupData : PBXObjectData
     {
         public GUIDList children;
         public PBXSourceTree tree; 
@@ -374,12 +352,12 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         internal override PropertyCommentChecker checker { get { return checkerData; } }
 
         // name must not contain '/'
-        public static PBXGroup Create(string name, string path, PBXSourceTree tree)
+        public static PBXGroupData Create(string name, string path, PBXSourceTree tree)
         {
             if (name.Contains("/"))
                 throw new Exception("Group name must not contain '/'");
 
-            PBXGroup gr = new PBXGroup();
+            PBXGroupData gr = new PBXGroupData();
             gr.guid = PBXGUID.Generate();
             gr.SetPropertyString("isa", "PBXGroup");
             gr.name = name;
@@ -390,7 +368,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
             return gr;
         }
         
-        public static PBXGroup CreateRelative(string name)
+        public static PBXGroupData CreateRelative(string name)
         {
             return Create(name, name, PBXSourceTree.Group);
         }
@@ -422,11 +400,11 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXVariantGroup : PBXGroup
+    internal class PBXVariantGroupData : PBXGroupData
     {
     }
 
-    internal class PBXNativeTarget : PBXObject
+    internal class PBXNativeTargetData : PBXObjectData
     {
         public GUIDList phases;
 
@@ -444,9 +422,10 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
 
         internal override PropertyCommentChecker checker { get { return checkerData; } }
         
-        public static PBXNativeTarget Create(string name, string productRef, string productType, string buildConfigList)
+        public static PBXNativeTargetData Create(string name, string productRef, 
+                                                 string productType, string buildConfigList)
         {
-            var res = new PBXNativeTarget();
+            var res = new PBXNativeTargetData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXNativeTarget");
             res.buildConfigList = buildConfigList;
@@ -477,7 +456,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
     }
 
 
-    internal class FileGUIDListBase : PBXObject
+    internal class FileGUIDListBase : PBXObjectData
     {
         public GUIDList files;
  
@@ -497,11 +476,11 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXSourcesBuildPhase : FileGUIDListBase
+    internal class PBXSourcesBuildPhaseData : FileGUIDListBase
     {
-        public static PBXSourcesBuildPhase Create()
+        public static PBXSourcesBuildPhaseData Create()
         {
-            var res = new PBXSourcesBuildPhase();
+            var res = new PBXSourcesBuildPhaseData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXSourcesBuildPhase");
             res.SetPropertyString("buildActionMask", "2147483647");
@@ -511,11 +490,11 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXFrameworksBuildPhase : FileGUIDListBase
+    internal class PBXFrameworksBuildPhaseData : FileGUIDListBase
     {
-        public static PBXFrameworksBuildPhase Create()
+        public static PBXFrameworksBuildPhaseData Create()
         {
-            var res = new PBXFrameworksBuildPhase();
+            var res = new PBXFrameworksBuildPhaseData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXFrameworksBuildPhase");
             res.SetPropertyString("buildActionMask", "2147483647");
@@ -525,11 +504,11 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXResourcesBuildPhase : FileGUIDListBase
+    internal class PBXResourcesBuildPhaseData : FileGUIDListBase
     {
-        public static PBXResourcesBuildPhase Create()
+        public static PBXResourcesBuildPhaseData Create()
         {
-            var res = new PBXResourcesBuildPhase();
+            var res = new PBXResourcesBuildPhaseData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXResourcesBuildPhase");
             res.SetPropertyString("buildActionMask", "2147483647");
@@ -539,7 +518,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXCopyFilesBuildPhase : FileGUIDListBase
+    internal class PBXCopyFilesBuildPhaseData : FileGUIDListBase
     {
         private static PropertyCommentChecker checkerData = new PropertyCommentChecker(new string[]{
             "files/*",
@@ -550,9 +529,9 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         public string name;
 
         // name may be null
-        public static PBXCopyFilesBuildPhase Create(string name, string subfolderSpec)
+        public static PBXCopyFilesBuildPhaseData Create(string name, string subfolderSpec)
         {
-            var res = new PBXCopyFilesBuildPhase();
+            var res = new PBXCopyFilesBuildPhaseData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXCopyFilesBuildPhase");
             res.SetPropertyString("buildActionMask", "2147483647");
@@ -576,7 +555,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXShellScriptBuildPhase : PBXObject
+    internal class PBXShellScriptBuildPhaseData : PBXObjectData
     {
         public GUIDList files;
 
@@ -596,7 +575,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class BuildConfigEntry
+    internal class BuildConfigEntryData
     {
         public string name;
         public List<string> val = new List<string>();
@@ -611,19 +590,24 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
             if (!val.Contains(value))
                 val.Add(value);
         }
-
-        public static BuildConfigEntry FromNameValue(string name, string value)
+        
+        public void RemoveValue(string value)
         {
-            BuildConfigEntry ret = new BuildConfigEntry();
+            val.RemoveAll(v => v == value);
+        }
+
+        public static BuildConfigEntryData FromNameValue(string name, string value)
+        {
+            BuildConfigEntryData ret = new BuildConfigEntryData();
             ret.name = name;
             ret.AddValue(value);
             return ret;
         }
     }
 
-    internal class XCBuildConfiguration : PBXObject
+    internal class XCBuildConfigurationData : PBXObjectData
     {
-        protected SortedDictionary<string, BuildConfigEntry> entries = new SortedDictionary<string, BuildConfigEntry>();
+        protected SortedDictionary<string, BuildConfigEntryData> entries = new SortedDictionary<string, BuildConfigEntryData>();
         public string name { get { return GetPropertyString("name"); } }
 
         // Note that QuoteStringIfNeeded does its own escaping. Double-escaping with quotes is
@@ -642,7 +626,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
 
         public void SetProperty(string name, string value)
         {
-            entries[name] = BuildConfigEntry.FromNameValue(name, EscapeWithQuotesIfNeeded(name, value));
+            entries[name] = BuildConfigEntryData.FromNameValue(name, EscapeWithQuotesIfNeeded(name, value));
         }
 
         public void AddProperty(string name, string value)
@@ -652,31 +636,23 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
             else
                 SetProperty(name, value);
         }
-
-        public void UpdateProperties(string name, string[] addValues, string[] removeValues)
+        
+        public void RemoveProperty(string name)
         {
             if (entries.ContainsKey(name))
-            {
-                HashSet<string> valSet = new HashSet<string>(entries[name].val);
-                
-                if (removeValues != null)
-                {
-                    foreach (string val in removeValues)
-                        valSet.Remove(EscapeWithQuotesIfNeeded(name, val));
-                }
-                if (addValues != null)
-                {
-                    foreach (string val in addValues)
-                        valSet.Add(EscapeWithQuotesIfNeeded(name, val));
-                }
-                entries[name].val = new List<string>(valSet);
-            }
+                entries.Remove(name);
+        }
+
+        public void RemovePropertyValue(string name, string value)
+        {
+            if (entries.ContainsKey(name))
+                entries[name].RemoveValue(EscapeWithQuotesIfNeeded(name, value));
         }
 
         // name should be either release or debug
-        public static XCBuildConfiguration Create(string name)
+        public static XCBuildConfigurationData Create(string name)
         {
-            var res = new XCBuildConfiguration();
+            var res = new XCBuildConfigurationData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "XCBuildConfiguration");
             res.SetPropertyString("name", name);
@@ -702,7 +678,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
         public override void UpdateVars()
         {
-            entries = new SortedDictionary<string, BuildConfigEntry>();
+            entries = new SortedDictionary<string, BuildConfigEntryData>();
             if (m_Properties.Contains("buildSettings"))
             {
                 var dict = m_Properties["buildSettings"].AsDict();
@@ -714,7 +690,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
                         if (entries.ContainsKey(key))
                             entries[key].val.Add(value.AsString());
                         else
-                            entries.Add(key, BuildConfigEntry.FromNameValue(key, value.AsString()));
+                            entries.Add(key, BuildConfigEntryData.FromNameValue(key, value.AsString()));
                     }
                     else if (value is PBXElementArray)
                     {
@@ -725,7 +701,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
                                 if (entries.ContainsKey(key))
                                     entries[key].val.Add(pvalue.AsString());
                                 else
-                                    entries.Add(key, BuildConfigEntry.FromNameValue(key, pvalue.AsString()));
+                                    entries.Add(key, BuildConfigEntryData.FromNameValue(key, pvalue.AsString()));
                             }
                         }
                     }
@@ -734,7 +710,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
     
-    internal class PBXContainerItemProxy : PBXObject
+    internal class PBXContainerItemProxyData : PBXObjectData
     {
         private static PropertyCommentChecker checkerData = new PropertyCommentChecker(new string[]{
             "containerPortal/*"
@@ -742,10 +718,10 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         
         internal override PropertyCommentChecker checker { get { return checkerData; } }
         
-        public static PBXContainerItemProxy Create(string containerRef, string proxyType,
+        public static PBXContainerItemProxyData Create(string containerRef, string proxyType,
                                                    string remoteGlobalGUID, string remoteInfo)
         {
-            var res = new PBXContainerItemProxy();
+            var res = new PBXContainerItemProxyData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXContainerItemProxy");
             res.SetPropertyString("containerPortal", containerRef); // guid
@@ -756,7 +732,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXReferenceProxy : PBXObject
+    internal class PBXReferenceProxyData : PBXObjectData
     {
         private static PropertyCommentChecker checkerData = new PropertyCommentChecker(new string[]{
             "remoteRef/*"
@@ -766,10 +742,10 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         
         public string path { get { return GetPropertyString("path"); } }
 
-        public static PBXReferenceProxy Create(string path, string fileType,
-                                               string remoteRef, string sourceTree)
+        public static PBXReferenceProxyData Create(string path, string fileType,
+                                                   string remoteRef, string sourceTree)
         {
-            var res = new PBXReferenceProxy();
+            var res = new PBXReferenceProxyData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXReferenceProxy");
             res.SetPropertyString("path", path);
@@ -780,7 +756,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
     
-    internal class PBXTargetDependency : PBXObject
+    internal class PBXTargetDependencyData : PBXObjectData
     {
         private static PropertyCommentChecker checkerData = new PropertyCommentChecker(new string[]{
             "target/*",
@@ -789,9 +765,9 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         
         internal override PropertyCommentChecker checker { get { return checkerData; } }
         
-        public static PBXTargetDependency Create(string target, string targetProxy)
+        public static PBXTargetDependencyData Create(string target, string targetProxy)
         {
-            var res = new PBXTargetDependency();
+            var res = new PBXTargetDependencyData();
             res.guid = PBXGUID.Generate();
             res.SetPropertyString("isa", "PBXTargetDependency");
             res.SetPropertyString("target", target);
@@ -814,7 +790,7 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
         }
     }
 
-    internal class PBXProjectObject : PBXObject
+    internal class PBXProjectObjectData : PBXObjectData
     {
         private static PropertyCommentChecker checkerData = new PropertyCommentChecker(new string[]{
             "buildConfigurationList/*",
@@ -828,7 +804,8 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
 
         public List<ProjectReference> projectReferences = new List<ProjectReference>();
         public string mainGroup { get { return GetPropertyString("mainGroup"); } }
-        public List<string> targets { get { return GetPropertyList("targets"); } }
+        public List<string> targets = new List<string>();
+        public List<string> knownAssetTags = new List<string>();
         public string buildConfigList;
 
         public void AddReference(string productGroup, string projectRef)
@@ -849,8 +826,21 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
                     dict.SetString("ProjectRef", value.projectRef);
                 }
             };
+            SetPropertyList("targets", targets);
             SetPropertyString("buildConfigurationList", buildConfigList);
+            if (knownAssetTags.Count > 0)
+            {
+                PBXElementDict attrs;
+                if (m_Properties.Contains("attributes"))
+                    attrs = m_Properties["attributes"].AsDict();
+                else
+                    attrs = m_Properties.CreateDict("attributes");
+                var tags = attrs.CreateArray("knownAssetTags");
+                foreach (var tag in knownAssetTags)
+                    tags.AddString(tag);
+            }
         }
+
         public override void UpdateVars()
         {
             projectReferences = new List<ProjectReference>();
@@ -868,7 +858,21 @@ namespace Fabric.Internal.Editor.ThirdParty.xcodeapi.PBX
                     }
                 }
             }
+            targets = GetPropertyList("targets");
             buildConfigList = GetPropertyString("buildConfigurationList");
+
+            // update knownAssetTags
+            knownAssetTags = new List<string>();
+            if (m_Properties.Contains("attributes"))
+            {
+                var el = m_Properties["attributes"].AsDict();
+                if (el.Contains("knownAssetTags"))
+                {
+                    var tags = el["knownAssetTags"].AsArray();
+                    foreach (var tag in tags.values)
+                        knownAssetTags.Add(tag.AsString());
+                }
+            }
         }
     }
 

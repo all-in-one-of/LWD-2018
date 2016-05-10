@@ -9,9 +9,12 @@
 
 	public class CrashlyticsInit : MonoBehaviour
 	{
+		// Since we do not support platforms other than Android and iOS,
+		// we'll do nothing in Play/Editor mode.
+#if !UNITY_EDITOR
 		private static readonly string kitName = "Crashlytics";
 
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS
 		[DllImport("__Internal")]
 		private static extern bool CLUIsInitialized();
 #endif
@@ -54,12 +57,12 @@
 				Utils.Log (kitName, "Did not register exception handlers: Crashlytics SDK was not initialized");
 			}
 		}
-		
+	
 		private static bool IsSDKInitialized ()
 		{
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS
 			return CLUIsInitialized ();
-#elif UNITY_ANDROID && !UNITY_EDITOR
+#elif UNITY_ANDROID
 			var crashlyticsClass = new AndroidJavaClass("com.crashlytics.android.Crashlytics");
 			AndroidJavaObject crashlyticsInstance = null;
 			try {
@@ -106,6 +109,7 @@
 			} else {
 				return new string[] {"Exception", message};
 			}
-		}		
+		}
+#endif
 	}
 }

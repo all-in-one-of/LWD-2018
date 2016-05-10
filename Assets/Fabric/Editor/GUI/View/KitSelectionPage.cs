@@ -12,15 +12,17 @@
 	
 	internal class KitSelectionPage : Page
 	{
+		private const string ButtonTextFormatString = "<size=10><color={0}>{1}</color></size>";
+
 		public delegate bool CheckUpdateAvailable ();
 
 		private readonly CheckUpdateAvailable isUpdateAvailable;
 
 		private Func<List<ImportedKit>> listImportedKits;
 		private Func<KitsList> listAvailableKits;
-		private Func<KitsObject, ImportedKit, KeyValuePair<DisplayedKitStatus, Version>> displayedKitStatusAndVersion;
+		private Action checkKitActivation;
 
-		private Action<KitsObject, ImportedKit, DisplayedKitStatus> onKitSelected;
+		private Action<KitsObject, ImportedKit> onKitSelected;
 		private KeyValuePair<string, Action> back;
 		private KeyValuePair<string, Action> viewUpdateClickHandler;
 		
@@ -30,8 +32,8 @@
 		public KitSelectionPage(
 			Func<KitsList> listAvailableKits,
 			Func<List<ImportedKit>> listImportedKits,
-			Func<KitsObject, ImportedKit, KeyValuePair<DisplayedKitStatus, Version>> displayedKitStatusAndVersion,
-			Action<KitsObject, ImportedKit, DisplayedKitStatus> onKitSelected,
+			Action<KitsObject, ImportedKit> onKitSelected,
+			Action checkKitActivation,
 			Action onBackClicked,
 			CheckUpdateAvailable isUpdateAvailable,
 			Action showUpdatePage
@@ -39,15 +41,11 @@
 		{
 			this.listImportedKits = listImportedKits;
 			this.listAvailableKits = listAvailableKits;
-			this.displayedKitStatusAndVersion = displayedKitStatusAndVersion;
 			this.onKitSelected = onKitSelected;
+			this.checkKitActivation = checkKitActivation;
 			this.back = new KeyValuePair<string, Action> ("Back", onBackClicked);
 			this.viewUpdateClickHandler = new KeyValuePair<string, Action> ("View Update", showUpdatePage);
 			this.isUpdateAvailable = isUpdateAvailable;
-
-			Update.PeriodicPinger.Enqueue (new Analytics.Events.PageViewEvent {
-				ScreenName = "KitSelectionPage",
-			});
 		}
 		
 		#region Components
@@ -61,7 +59,7 @@
 			
 			private static Vector2 scroll;
 			
-			private static readonly int padding = 16;
+			private static readonly int padding = 14;
 			
 			static Components()
 			{
@@ -88,67 +86,54 @@
 
 			private static string Stylize(string raw, string color = "silver")
 			{
-				string prefix = "<size=10><color=" + color + ">";
-				string suffix = "</color></size>";
-
-				return prefix + raw + suffix;
+				return String.Format (ButtonTextFormatString, color, raw);
 			}
 
 			private static string Separate(string name, string status)
 			{
-				return name + " " + status;
+				return name + "\n" + status;
 			}
 
-			private static string MakeRowCaption(string name, string installedVersion, string availableVersion, DisplayedKitStatus status)
+			private static string MakeRowCaption(KitRowData rowData)
 			{
-				switch (status) {
-				case DisplayedKitStatus.Installed:
-					return Separate (name, Stylize ("Installed (v. " + installedVersion + ")"));
-				case DisplayedKitStatus.NotInstalled:
-					return Separate (name, Stylize ("Available (v. " + availableVersion + ")"));
-				case DisplayedKitStatus.UpgradeAvailable:
-					//This is not used at the moment
-					return Separate (name, Stylize ("Update Available (v. " + availableVersion + ")", "orange"));
-				default:
-					return Separate (name, Stylize ("Unknown"));
+				if (KitStatus.Available != rowData.Status && !rowData.IsUpToDate) {
+					string updateText = String.Format ("Update available: v{0}", rowData.LatestVersion);
+					return Separate (rowData.Name, Stylize (updateText, "orange"));
 				}
+
+				string stateString = String.Empty;
+				switch (rowData.Status) {
+				case KitStatus.Installed:
+					stateString = String.Format ("v{0} Installed", rowData.CurrentVersion);
+					break;
+				case KitStatus.Configured:
+					stateString = String.Format ("v{0} Configured - waiting for app launch", rowData.CurrentVersion);
+					break;
+				case KitStatus.Imported:
+					stateString = String.Format ("Click to configure v{0}", rowData.CurrentVersion);
+					break;
+				case KitStatus.Available:
+					stateString = String.Format ("Click to install v{0}", rowData.LatestVersion);
+					break;
+				}
+
+				return Separate (rowData.Name, Stylize (stateString));
 			}
 			
 			public static void RenderKitList(
-				ref KitsList availableKits,
-				ref List<ImportedKit> importedKits,
-				Action<KitsObject, ImportedKit, DisplayedKitStatus> onSelected,
-				Func<KitsObject, ImportedKit, KeyValuePair<DisplayedKitStatus, Version>> displayedKitStatusAndVersion,
+				List<KitRowData> kitRowDataList,
+				Action<KitsObject, ImportedKit> onSelected,
+				Action clearKitLists,
 				bool disabled
 			)
 			{
-				if (availableKits == null)
-					return;
-				
 				scroll = GUILayout.BeginScrollView (scroll, ScrollStyle);
 
 				GUI.enabled = !disabled;
-				foreach (var kit in availableKits) {
-					ImportedKit imported = null;
-					
-					if (importedKits != null) {
-						imported = importedKits.Find ((ImportedKit k) => {
-							return k.Name.ToLower ().Equals (kit.Name.ToLower ());
-						});
-					}
-
-					KeyValuePair<DisplayedKitStatus, Version> status = displayedKitStatusAndVersion (kit, imported);
-
-					if (GUILayout.Button (MakeRowCaption(
-						kit.Name,
-						status.Value.ToString (),
-						kit.Version.ToString (),
-						status.Key
-					), RowStyle)) {
-						onSelected (kit, imported, status.Key);
-
-						importedKits = null;
-						availableKits = null;
+				foreach (KitRowData rowData in kitRowDataList) {
+					if (GUILayout.Button (MakeRowCaption(rowData), RowStyle)) {
+						onSelected (rowData.AvailableKit, rowData.ImportedKit);
+						clearKitLists ();
 					}
 				}
 				GUI.enabled = true;
@@ -166,24 +151,85 @@
 
 			RenderHeader ("Please select a kit to install");
 
-			bool hasInstalledKits = Settings.Instance.InstalledKits.FindAll (k => k.Installed).Count > 0;
+			importedKits = importedKits == null ? listImportedKits () : importedKits;
+			availableKits = listAvailableKits ();
 
-			if (EditorApplication.isCompiling || hasInstalledKits) {
+			if (availableKits == null) {
+				return;
+			}
+
+			List<KitRowData> kitRowDataList = new List<KitRowData> ();
+
+			bool hasConfiguredKits = false;
+			bool hasInstalledKits = false;
+
+			foreach (var availableKit in availableKits) {
+				ImportedKit importedKit = (importedKits == null) ? null : importedKits.Find ((ImportedKit k) => {
+					return k.Name.Equals (availableKit.Name, StringComparison.OrdinalIgnoreCase);
+				});
+
+				KitRowData kitRowData = new KitRowData (availableKit, importedKit);
+
+				hasConfiguredKits |= kitRowData.Status == KitStatus.Configured;
+				hasInstalledKits |= kitRowData.Status == KitStatus.Installed;
+
+				kitRowDataList.Add (kitRowData);
+			}
+
+			if (hasConfiguredKits) {
+				checkKitActivation ();
+			}
+
+			bool shouldDisableBack = EditorApplication.isCompiling || hasConfiguredKits || hasInstalledKits;
+			if (shouldDisableBack) {
 				RenderFooter (null, null);
 			} else {
 				RenderFooter (back, null);
 			}
-
-			importedKits = importedKits == null ? listImportedKits () : importedKits;
-			availableKits = listAvailableKits ();
 			
 			Components.RenderKitList (
-				ref availableKits,
-				ref importedKits,
+				kitRowDataList,
 				onKitSelected,
-				displayedKitStatusAndVersion,
+				clearKitLists,
 				EditorApplication.isCompiling
 			);
+		}
+
+		private void clearKitLists()
+		{
+			importedKits = null;
+			availableKits = null;
+		}
+
+		private class KitRowData
+		{
+			public KitsObject AvailableKit;
+			public ImportedKit ImportedKit;
+
+			public string Name;
+			public bool IsUpToDate;
+			public KitStatus Status;
+			public string CurrentVersion;
+			public string LatestVersion;
+
+			public KitRowData(KitsObject availableKit, ImportedKit importedKit)
+			{
+				this.AvailableKit = availableKit;
+				this.ImportedKit = importedKit;
+
+				this.LatestVersion = availableKit.Version.ToString ();
+				this.IsUpToDate = KitUtils.IsUpToDate(availableKit, importedKit);
+
+				this.Name = availableKit.Name;
+				this.Status = KitStatus.Available;
+				this.CurrentVersion = new System.Version ().ToString (); // Default is 0.0
+
+				if (importedKit != null) {
+					this.Name = importedKit.Name;
+					this.Status = KitUtils.StatusFor (importedKit);
+					this.CurrentVersion = importedKit.Instance.Version ().ToString ();
+				}
+			}
 		}
 	}
 }

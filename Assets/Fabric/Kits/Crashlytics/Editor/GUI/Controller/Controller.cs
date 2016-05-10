@@ -85,23 +85,43 @@
 		
 		public KitControllerStatus PageFromState(out Page page)
 		{
-			if (Settings.Instance.InstalledKits.Exists (kit => kit.Name.Equals (Name) && kit.Installed)) {
-				page = Dashboard;
-				return KitControllerStatus.NextPage;
+			List<Settings.InstalledKit> installedKits = Settings.Instance.InstalledKits;
+			Settings.InstalledKit crashlyticsKit = installedKits.Find (kit => kit.Name.Equals (Name, StringComparison.OrdinalIgnoreCase));
+
+			switch (crashlyticsKit.InstallationStatus) {
+			case Settings.KitInstallationStatus.Installed:
+				return ShowInstalledPage (out page);
+			case Settings.KitInstallationStatus.Imported:
+				return ShowInstallationFlowPage (Settings.Instance.FlowSequence, out page);
+			case Settings.KitInstallationStatus.Configured:
+			default:
+				return ShowConfiguredPage (out page);
 			}
-			
-			page = null;
-			switch (Settings.Instance.FlowSequence) {
+		}
+
+		private KitControllerStatus ShowInstallationFlowPage(int flowSequence, out Page page)
+		{
+			switch (flowSequence) {
 			case 0:
 				page = Instructions;
-				break;
+				return KitControllerStatus.NextPage;
 			case 1:
 				page = Prefab;
-				break;
-			case 2:
-				return KitControllerStatus.LastPage;
+				return KitControllerStatus.NextPage;
+			default:
+				return ShowConfiguredPage (out page);
 			}
-			
+		}
+
+		private KitControllerStatus ShowConfiguredPage(out Page page)
+		{
+			page = null;
+			return KitControllerStatus.LastPage;
+		}
+
+		private KitControllerStatus ShowInstalledPage(out Page page)
+		{
+			page = Dashboard;
 			return KitControllerStatus.NextPage;
 		}
 
@@ -128,16 +148,6 @@
 		private Action ApplyKitChanges()
 		{
 			return delegate() {
-				List<Settings.InstalledKit> installedKits = Settings.Instance.InstalledKits;
-
-				installedKits.RemoveAll (installed => installed.Name.Equals (Name));
-				installedKits.Add (new Settings.InstalledKit {
-					Name = Name,
-					Installed = false
-				});
-
-				Settings.Instance.InstalledKits = installedKits;
-
 				CrashlyticsSetup.EnableCrashlytics (false);
 				Settings.Instance.FlowSequence = 1;
 			};
@@ -152,28 +162,29 @@
 			};
 		}
 		#endregion
-		
+
 		#region DownloadIcon
 		public Func<Texture2D> DownloadIcon()
 		{
 			return delegate() {
-				if (!isDownloadingIcon && Icon == null && !string.IsNullOrEmpty (Settings.Instance.IconUrl)) {
+				string iconUrl = Settings.Instance.IconUrl;
+
+				if (!isDownloadingIcon && Icon == null && !string.IsNullOrEmpty (iconUrl)) {
 					isDownloadingIcon = true;
 
 					new AsyncTaskRunnerBuilder<byte[]> ().Do ((object[] args) => {
 						return Internal.Editor.Net.Validator.MakeRequest (() => {
-							return Internal.Editor.API.V1.DownloadFile (Settings.Instance.IconUrl);
+							return Internal.Editor.API.V1.DownloadFile (args[0] as string);
 						});
 					}).OnError ((System.Exception e) => {
 						Utils.Warn ("App icon download failed. {0}", e.Message);
-						isDownloadingIcon = false;
 						return AsyncTaskRunner<byte[]>.ErrorRecovery.Nothing;
 					}).OnCompletion ((byte[] textureData) => {
 						Texture2D texture = new Texture2D (0, 0);
 						texture.LoadImage (textureData);
 						Icon = texture;
 						isDownloadingIcon = false;
-					}).Run ();
+					}).Run (iconUrl);
 				}
 				
 				return Icon;

@@ -11,9 +11,36 @@
 	#if UNITY_ANDROID && !UNITY_EDITOR
 	internal class AndroidImpl : Impl
 	{
-		private static readonly AndroidJavaObject native = new AndroidJavaObject ("com.crashlytics.android.Crashlytics");
-		private static readonly AndroidJavaClass crashWrapper = new AndroidJavaClass ("io.fabric.unity.crashlytics.android.CrashlyticsAndroidWrapper");
-		private AndroidJavaObject instance;
+		private AndroidJavaObject native = null;
+		private AndroidJavaObject Native
+		{
+			get {
+				if (native == null)
+					native = new AndroidJavaObject ("com.crashlytics.android.Crashlytics");
+				return native;
+			}
+		}
+		private AndroidJavaClass crashWrapper = null;
+		private AndroidJavaClass CrashWrapper
+		{
+			get {
+				if (crashWrapper == null)
+					crashWrapper = new AndroidJavaClass ("io.fabric.unity.crashlytics.android.CrashlyticsAndroidWrapper");
+				return crashWrapper;
+			}
+		}
+
+		private AndroidJavaObject instance = null;
+		private AndroidJavaObject Instance
+		{
+			get {
+				if (instance == null)
+					instance = Native.CallStatic<AndroidJavaObject> ("getInstance");
+				if (instance == null)
+					throw new JavaInteropException ("Couldn't get an instance of the Crashlytics class!");
+				return instance;
+			}
+		}
 
 		public class JavaInteropException : System.Exception
 		{
@@ -24,41 +51,38 @@
 
 		public AndroidImpl()
 		{
-			if ((instance = native.CallStatic<AndroidJavaObject> ("getInstance")) == null) {
-				throw new JavaInteropException ("Couldn't get an instance of the Crashlytics class!");
-			}
 		}
 		
 		public override void Crash ()
 		{
 			// Unity's C#-Java bridge intercepts Java exceptions, so here we provide a convenience
 			// crasher that throws an exception on another thread (and hence bypasses Unity's exception handlers)
-			crashWrapper.CallStatic ("crash");
+			CrashWrapper.CallStatic ("crash");
 		}
 		
 		public override void Log(string message)
 		{
-			instance.CallStatic ("log", message);
+			Instance.CallStatic ("log", message);
 		}
 		
 		public override void SetKeyValue(string key, string value)
 		{
-			instance.CallStatic ("setString", new object[] { key, value });
+			Instance.CallStatic ("setString", new object[] { key, value });
 		}
 		
 		public override void SetUserIdentifier(string identifier)
 		{
-			instance.CallStatic ("setUserIdentifier", identifier);
+			Instance.CallStatic ("setUserIdentifier", identifier);
 		}
 		
 		public override void SetUserEmail(string email)
 		{
-			instance.CallStatic ("setUserEmail", email);
+			Instance.CallStatic ("setUserEmail", email);
 		}
 		
 		public override void SetUserName(string name)
 		{
-			instance.CallStatic ("setUserName", name);
+			Instance.CallStatic ("setUserName", name);
 		}
 
 		public override void RecordCustomException(string name, string reason, StackTrace stackTrace)

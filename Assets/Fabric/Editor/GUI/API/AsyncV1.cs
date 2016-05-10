@@ -14,7 +14,24 @@
 			Fetch<T> (1, new TimeSpan (0), onSuccess, onFailure, fetch);
 		}
 
+		public static void Fetch<T> (Action<T> onSuccess, Action<Exception> onFailure, Action<Exception> onNoNetwork, Func<API.V1, T> fetch)
+		{
+			Fetch<T> (1, new TimeSpan (0), onSuccess, onFailure, onNoNetwork, fetch);
+		}
+
 		public static void Fetch<T>(uint retryCount, TimeSpan retryDelay, Action<T> onSuccess, Action<string> onFailure, Func<API.V1, T> fetch)
+		{
+			Fetch<T> (retryCount, retryDelay, onSuccess,
+				(Exception e) => {
+					onFailure ("Request failed: " + e.Message);
+				},
+				(Exception e) => {
+					onFailure ("Network is not available.");
+				}, fetch
+			);
+		}
+
+		public static void Fetch<T>(uint retryCount, TimeSpan retryDelay, Action<T> onSuccess, Action<Exception> onFailure, Action<Exception> onNoNetwork, Func<API.V1, T> fetch)
 		{
 			Client.Token token = Settings.Instance.Token;
 
@@ -26,26 +43,26 @@
 						token
 					));
 				});
-			}).OnError ((System.Exception e) => {
-				string error = e.Message;
+			}).OnError ((Exception e) => {
+				Exception error = e;
 
-				if (Net.Utils.IsNetworkUnavailableFrom (e)) {
-					onFailure ("Network is not available.");
+				if (Net.Utils.IsNetworkUnavailableFrom (error)) {
+					onNoNetwork (error);
 					return Detail.AsyncTaskRunner<T>.ErrorRecovery.Nothing;
 				}
 
-				if (e is API.V1.UnauthorizedException) {
+				if (error is API.V1.UnauthorizedException) {
 					try {
 						token = RefreshToken ();
 						return Detail.AsyncTaskRunner<T>.ErrorRecovery.Retry;
 					} catch (System.Exception refreshException) {
-						error = refreshException.Message;
+						error = refreshException;
 					}
-				} else if (e is API.V1.ApiException) {
+				} else if (error is API.V1.ApiException) {
 					return Detail.AsyncTaskRunner<T>.ErrorRecovery.Retry;
 				}
 				
-				onFailure ("Request failed, " + error);
+				onFailure (error);
 				return Detail.AsyncTaskRunner<T>.ErrorRecovery.Nothing;
 			}).OnCompletion ((T result) => {
 				onSuccess (result);
