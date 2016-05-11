@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
 // 
-
 using System.Collections;
 using UnityEngine;
 
@@ -23,7 +22,7 @@ namespace Oldehoven
     /// <summary>
     ///     The AI for the toeristen;
     /// </summary>
-    public class ToeristAI : MonoBehaviour
+    public class TouristAi : MonoBehaviour
     {
         private Animator _animator;
 
@@ -45,10 +44,14 @@ namespace Oldehoven
         private GameObject _mainMesh;
         private GameObject _ohCenter;
 
+        private Vector3 _orgPosition;
+
         /// <summary>
         ///     The parachute.
         /// </summary>
         private GameObject _parachute;
+
+        private Vector3 _parachutePos;
 
         /// <summary>
         ///     True if the parachute is deployed
@@ -78,8 +81,11 @@ namespace Oldehoven
 
         public void Awake()
         {
+            _orgPosition = transform.position;
+
             _mainMesh = transform.Find("Mesh").gameObject;
             _parachute = transform.Find("Parachute").gameObject;
+            _parachutePos = _parachute.transform.position;
             _rigidbody = GetComponent<Rigidbody>();
             _rigidbodyParachute = _parachute.GetComponent<Rigidbody>();
             _ohCenter = GameObject.Find("OHCenter");
@@ -106,13 +112,13 @@ namespace Oldehoven
 
             _score = GameObject.Find("OHScore").GetComponent<Score>();
 
-#if DEBUG
+#if UNITY_EDITOR
             _debug = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             _debug.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             DestroyImmediate(_debug.GetComponent<CapsuleCollider>());
             _debug.GetComponent<MeshRenderer>().material = mat;
             _debug.transform.parent = transform;
-#endif
+#endif //UNITY_EDITOR
         }
 
         /// <summary>
@@ -174,12 +180,26 @@ namespace Oldehoven
                 {
                     StartCoroutine(UpdateModel());
                 }
-#if DEBUG
+#if UNITY_EDITOR
                 var tmp = new Vector3(_ohCenter.transform.position.x + _pos, transform.position.y + 2,
                     transform.position.z);
                 _debug.transform.position = tmp;
-#endif
+#endif //UNITY_EDITOR
             }
+        }
+
+        /// <summary>
+        ///     Resets this instance.
+        /// </summary>
+        public void Reset()
+        {
+            _speedModifier = _score.Level*2 + 25;
+            _parachuteIsDeployed = false;
+            _parachute.SetActive(false);
+            transform.position = _orgPosition;
+            _parachute.transform.parent = transform;
+            _parachute.transform.position = _parachutePos;
+            StartCoroutine(UpdateModel());
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Lw18
     /// <summary>
     ///     Class for multiplatform input.
     /// </summary>
-    public class Input
+    public class EditorInput
     {
         /// <summary>
         ///     Behaves as TouchPhase on mobile.
@@ -67,30 +67,30 @@ namespace Lw18
             switch (state)
             {
                 case InputState.Began:
-                    return UnityEngine.Input.GetMouseButtonDown(0);
+                    return Input.GetMouseButtonDown(0);
                 case InputState.Moving:
-                    return UnityEngine.Input.GetMouseButton(0);
+                    return Input.GetMouseButton(0);
                 case InputState.Ended:
-                    return UnityEngine.Input.GetMouseButtonUp(0);
+                    return Input.GetMouseButtonUp(0);
                 case InputState.Canceled:
                     return false;
                 default:
                     throw new ArgumentOutOfRangeException("touch", state, null);
             }
 #else
-        switch (state)
-        {
-            case InputState.Began:
-                return touch.phase == TouchPhase.Began;
-            case InputState.Moving:
-                return touch.phase == TouchPhase.Moved;
-            case InputState.Ended:
-                return touch.phase == TouchPhase.Ended;
-            case InputState.Canceled:
-                return touch.phase == TouchPhase.Canceled;
-            default:
-                throw new ArgumentOutOfRangeException("touchPhase", state, null);
-        }
+            switch (state)
+            {
+                case InputState.Began:
+                    return touch.phase == TouchPhase.Began;
+                case InputState.Moving:
+                    return touch.phase == TouchPhase.Moved;
+                case InputState.Ended:
+                    return touch.phase == TouchPhase.Ended;
+                case InputState.Canceled:
+                    return touch.phase == TouchPhase.Canceled;
+                default:
+                    throw new ArgumentOutOfRangeException("touchPhase", state, null);
+            }
 
 #endif //UNITY_EDITOR
         }

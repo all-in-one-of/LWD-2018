@@ -15,8 +15,9 @@
 // along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
 // 
 
+
+using Lw18;
 using UnityEngine;
-using Input = Lw18.Input;
 
 namespace BHPGame
 {
@@ -54,8 +55,7 @@ namespace BHPGame
         /// <summary>
         ///     True if the user is currently dragging a prisoner
         /// </summary>
-        [HideInInspector]
-        public bool Dragging;
+        [HideInInspector] public bool Dragging;
 
         public void Start()
         {
@@ -72,7 +72,7 @@ namespace BHPGame
             Dragging = false;
             return;
         }
-        checkTouch(Input.touches[0]); 
+            CheckTouch(Input.touches[0]); 
 #endif //UNITY_EDITOR
         }
 
@@ -81,12 +81,12 @@ namespace BHPGame
             Vector3 v3;
 
 #if UNITY_EDITOR
-            var pos = UnityEngine.Input.mousePosition;
+            var pos = Input.mousePosition;
 #else
-        Vector3 pos = touch.position;
+            var pos = touch.position;
 #endif //UNITY_EDITOR
 
-            if (Input.GetState(touch, Input.InputState.Began))
+            if (EditorInput.GetState(touch, EditorInput.InputState.Began))
             {
                 Dragging = false;
                 _prisonerTransform = null;
@@ -109,15 +109,15 @@ namespace BHPGame
                     Dragging = true;
                 }
             }
-            if (Dragging && Input.GetState(touch, Input.InputState.Moving))
+            if (Dragging && EditorInput.GetState(touch, EditorInput.InputState.Moving))
             {
-                v3 = new Vector3(UnityEngine.Input.mousePosition.x, UnityEngine.Input.mousePosition.y, _dist);
+                v3 = new Vector3(Input.mousePosition.x, Input.mousePosition.y, _dist);
                 v3 = Camera.main.ScreenToWorldPoint(v3);
                 if (_prisonerTransform != null) _prisonerTransform.position = v3 + _offset;
             }
             if (Dragging &&
-                (Input.GetState(touch, Input.InputState.Ended) ||
-                 Input.GetState(touch, Input.InputState.Canceled)))
+                (EditorInput.GetState(touch, EditorInput.InputState.Ended) ||
+                 EditorInput.GetState(touch, EditorInput.InputState.Canceled)))
             {
                 Dragging = false;
                 _objectPool.SetAllFree();

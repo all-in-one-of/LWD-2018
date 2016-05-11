@@ -22,10 +22,10 @@ namespace BHPGame
     public class PrisonerAi : MonoBehaviour
     {
         public LayerMask LayerMask;
-        [HideInInspector]
-        public bool Pooled;
-        [HideInInspector]
-        public Rigidbody Rigidbody;
+
+        [HideInInspector] public bool Pooled;
+
+        [HideInInspector] public Rigidbody Rigidbody;
 
         private void Start()
         {

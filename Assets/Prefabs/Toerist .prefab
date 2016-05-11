@@ -362,7 +362,7 @@ GameObject:
   - 4: {fileID: 405394}
   - 136: {fileID: 13688826}
   - 54: {fileID: 5455500}
-  - 114: {fileID: 11477340}
+  - 114: {fileID: 11454298}
   m_Layer: 8
   m_Name: 'Toerist '
   m_TagString: Toerist
@@ -857,7 +857,7 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
---- !u!114 &11477340
+--- !u!114 &11454298
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}

@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
 // 
-
 using UnityEngine;
 
 namespace Oldehoven
@@ -45,9 +44,9 @@ namespace Oldehoven
             _force += Input.GetAxis("Mouse X");
             if (Input.GetMouseButtonDown(0))
                 _rigidbody.isKinematic = !_rigidbody.isKinematic;
-#else
-        _force = Input.acceleration.x * 50;
-#endif
+#else //UNITY_EDITOR
+            _force = Input.acceleration.x * 50;
+#endif //UNITY_EDITOR
             _rigidbody.AddTorque(new Vector3(0, 0, -_force)*500);
         }
     }

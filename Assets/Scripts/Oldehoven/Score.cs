@@ -15,8 +15,12 @@
 // along with Leeuwarden-2018. If not, see <http://www.gnu.org/licenses/>.
 // 
 
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 namespace Oldehoven
 {
@@ -28,53 +32,97 @@ namespace Oldehoven
         /// <summary>
         ///     True if the game has ended.
         /// </summary>
-        private bool _end;
+        private bool _countScore = true;
 
         /// <summary>
         ///     The end screen.
         /// </summary>
-        private GameObject _endScreen;
+        private GameObject _scoreScreen;
 
         /// <summary>
         ///     The score text.
         /// </summary>
-        private Text _scoreText;
+        private Text _textObj;
 
-        private float _timeSurvived;
+        public int Level;
+
+        private int _lives = 3;
+
+        private float _timeLeft = 30;
 
         /// <summary>
-        ///     The amount of toeristen left.
+        ///     The amount of touristen left.
         /// </summary>
-        private int _toeristen;
+        private int _touristsLeft;
+
+        private TouristAi[] _touristAis;
+
+        private GameObject _oldehoven;
 
         private void Start()
         {
-            _endScreen = GameObject.Find("EndSceen");
-            _endScreen.SetActive(false);
-            _scoreText = GameObject.Find("Score").GetComponent<Text>();
-            _scoreText.text = "Time " + _timeSurvived;
-            _toeristen = GameObject.FindGameObjectsWithTag("Toerist").Length;
+            _scoreScreen = GameObject.Find("EndSceen");
+            _scoreScreen.SetActive(false);
+            _textObj = GameObject.Find("Score").GetComponent<Text>();
+            _textObj.text = "Time " + Mathf.Floor(_timeLeft) + "\nLives Left " + _lives;
+            var touristen = GameObject.FindGameObjectsWithTag("Toerist");
+            _touristsLeft = touristen.Length;
+            _touristAis = touristen.Select(o => o.GetComponent<TouristAi>()).ToArray();
+            _oldehoven = GameObject.Find("Oldehoven");
         }
 
-        public void Update()
+        private void Update()
         {
-            if (!_end)
+            if (_countScore)
             {
-                _timeSurvived += Time.deltaTime;
-                _scoreText.text = "Time " + Mathf.Floor(_timeSurvived);
+                _timeLeft -= Time.deltaTime;
+                _textObj.text = "Time " + Mathf.Floor(_timeLeft) + "\nLives Left " + _lives;
+                if (_timeLeft <= 0) StartCoroutine(ResetLevel(true));
             }
         }
 
         public void TouristHasFallen()
         {
-            _toeristen--;
-            print(_toeristen);
-            if (_toeristen <= 0)
+            _touristsLeft--;
+            print(_touristsLeft);
+            if (_touristsLeft <= 0) StartCoroutine(ResetLevel(false));
+        }
+
+        IEnumerator ResetLevel(bool levelup)
+        {
+            if (levelup)
             {
-                _end = true;
-                _endScreen.SetActive(true);
-                _endScreen.GetComponentInChildren<Text>().text = "Time " + Mathf.Floor(_timeSurvived);
+                Level++;
             }
+            else
+            {
+                _lives --;
+            }
+
+            _countScore = false;
+            _scoreScreen.SetActive(true);
+            _touristsLeft = _touristAis.Length;
+
+            _scoreScreen.GetComponentInChildren<Text>().text = "Current level " + Level + "\nLives Left " + _lives;
+
+            yield return new WaitForSeconds(5);
+
+            _oldehoven.transform.rotation=Quaternion.identity;
+
+            if (_lives <= 0)
+            {
+                SceneManager.LoadScene(0);
+                yield break;
+            }
+
+            foreach (var touristAi in _touristAis)
+            {
+                touristAi.Reset();
+            }
+
+            _countScore = true;
+            _scoreScreen.SetActive(false);
+            _timeLeft = 30;
         }
     }
 }
