@@ -113,13 +113,12 @@
 
 		public static byte[] DownloadFile(string URI, Action<float> reportProgress, Func<bool> isCancelled)
 		{
-			HttpWebRequest request = WebRequest.Create (URI) as HttpWebRequest;
+			WebRequest request = WebRequest.Create (URI);
 
 			request.Method = "GET";
 			request.ContentType = "application/x-www-form-urlencoded";
-			request.Accept = "application/octect-stream";
 
-			HttpWebResponse response = request.GetResponse () as HttpWebResponse;
+			WebResponse response = request.GetResponse ();
 
 			long contentLength = response.ContentLength;
 

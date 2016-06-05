@@ -128,7 +128,6 @@
 
 		public void Render(Rect position)
 		{
-			EditorGUI.DrawRect (new Rect (0, 0, position.width, position.height), View.Render.Lerped);
 			Reposition (position);
 			RenderImpl (position);
 		}

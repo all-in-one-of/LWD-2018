@@ -37,8 +37,8 @@
 
 		public void Start()
 		{
-			if (timer != null) {
-				return; // Already started.
+			if (timer != null || UnityEditorInternal.InternalEditorUtility.inBatchMode) {
+				return;
 			}
 
 			timer = new Timer (CheckForUpdates, null, delayMillis, checkPeriodMillis);

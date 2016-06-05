@@ -12,6 +12,7 @@
 			Action<float> onProgress,
 			Action<string> downloadComplete,
 			Action<System.Exception> downloadError,
+			Action verificationError,
 			Func<bool> isCancelled
 		);
 
@@ -27,7 +28,8 @@
 			Failed,
 			Cancelled,
 			Completed,
-			NetworkUnavailable
+			NetworkUnavailable,
+			VerificationFailed
 		}
 
 		private volatile Status status;
@@ -144,6 +146,15 @@
 				);
 				GUILayout.EndVertical ();
 			}
+
+			public static void RenderVerificationFailed()
+			{
+				GUILayout.BeginVertical (DownloadFailedPaneStyle);
+				GUILayout.Label ("Oops, looks like something odd happened.", DownloadFailedLabelStyle);
+				GUILayout.Label ("We couldn't verify the downloaded binaries!", DownloadFailedLabelStyle);
+				GUILayout.Label ("Please contact support@fabric.io.", DownloadFailedLabelStyle);
+				GUILayout.EndVertical ();
+			}
 		}
 		#endregion
 
@@ -178,6 +189,11 @@
 				Components.RenderDownloadBar (position, downloadProgress, downloadLabel, importLabel);
 				next = retry;
 				break;
+			case Status.VerificationFailed:
+				Components.RenderDownloadBar (position, downloadProgress, downloadLabel, importLabel);
+				Components.RenderVerificationFailed ();
+				next = retry;
+				break;
 			case Status.Idle:
 			default:
 				Components.RenderReleaseNotes (fetchReleaseNotes ());
@@ -192,7 +208,13 @@
 		{
 			downloadProgress = 0f;
 			status = Status.InProgress;
-			onAcceptUpdate (HandleProgressUpdate, HandleDownloadComplete, HandleDownloadError, CheckIsCancelled);
+			onAcceptUpdate (
+				HandleProgressUpdate,
+				HandleDownloadComplete,
+				HandleDownloadError,
+				HandleVerificationError,
+				CheckIsCancelled
+			);
 		}
 
 		private void Reset()
@@ -226,6 +248,11 @@
 			status = Net.Utils.IsNetworkUnavailableFrom (exception) ?
 				Status.NetworkUnavailable :
 				Status.Failed;
+		}
+
+		private void HandleVerificationError()
+		{
+			status = Status.VerificationFailed;
 		}
 
 		private static string getStatusLabel(Status status)

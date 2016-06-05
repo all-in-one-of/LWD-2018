@@ -155,6 +155,22 @@ namespace Fabric.Internal.Editor.Model
 		}
 		#endregion
 
+		#region Conflict
+		[SerializeField]
+		private string conflict;
+
+		[HideInInspector]
+		public string Conflict
+		{
+			get { return Instance.conflict; }
+			set {
+				Instance.conflict = value;
+				EditorUtility.SetDirty (Instance);
+			}
+		}
+
+		#endregion
+
 		#region Kit
 		[SerializeField]
 		private string kit;

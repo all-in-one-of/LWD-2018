@@ -22,7 +22,7 @@
 		private Func<KitsList> listAvailableKits;
 		private Action checkKitActivation;
 
-		private Action<KitsObject, ImportedKit> onKitSelected;
+		private Action<KitsObject, ImportedKit, bool> onKitSelected;
 		private KeyValuePair<string, Action> back;
 		private KeyValuePair<string, Action> viewUpdateClickHandler;
 		
@@ -32,7 +32,7 @@
 		public KitSelectionPage(
 			Func<KitsList> listAvailableKits,
 			Func<List<ImportedKit>> listImportedKits,
-			Action<KitsObject, ImportedKit> onKitSelected,
+			Action<KitsObject, ImportedKit, bool> onKitSelected,
 			Action checkKitActivation,
 			Action onBackClicked,
 			CheckUpdateAvailable isUpdateAvailable,
@@ -122,7 +122,7 @@
 			
 			public static void RenderKitList(
 				List<KitRowData> kitRowDataList,
-				Action<KitsObject, ImportedKit> onSelected,
+				Action<KitsObject, ImportedKit, bool> onSelected,
 				Action clearKitLists,
 				bool disabled
 			)
@@ -132,7 +132,7 @@
 				GUI.enabled = !disabled;
 				foreach (KitRowData rowData in kitRowDataList) {
 					if (GUILayout.Button (MakeRowCaption(rowData), RowStyle)) {
-						onSelected (rowData.AvailableKit, rowData.ImportedKit);
+						onSelected (rowData.AvailableKit, rowData.ImportedKit, true);
 						clearKitLists ();
 					}
 				}

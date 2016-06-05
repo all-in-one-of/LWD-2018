@@ -58,7 +58,7 @@
 					string packageName,
 					string manifest,
 					string releaseNotesUrl,
-					List<string> dependsOn,
+					List<object> dependsOn,
 					string minimumPluginVersion
 				)
 				{
@@ -68,7 +68,7 @@
 					PackageName = packageName;
 					Manifest = manifest;
 					ReleaseNotesUrl = releaseNotesUrl;
-					DependsOn = dependsOn;
+					DependsOn = dependsOn.ConvertAll (obj => obj as string);
 					MinimumPluginVersion = minimumPluginVersion;
 				}
 
@@ -86,7 +86,7 @@
 							typed ["packageName"] as string,
 							typed ["manifest"] as string,
 							typed ["releaseNotesUrl"] as string,
-							typed ["dependsOn"] as List<string>,
+							typed ["dependsOn"] as List<object>,
 							typed ["minimumPluginVersion"] as string
 						));
 					}
@@ -96,23 +96,94 @@
 			}
 			#endregion
 
+			#region TransitiveDependenciesObject
+			internal class TransitiveDependenciesObject
+			{
+				public readonly string Name;
+				public readonly string Version;
+				public readonly List<string> DependsOn;
+
+				private TransitiveDependenciesObject(string name, string version, List<object> dependsOn)
+				{
+					Name = name;
+					Version = version;
+					DependsOn = dependsOn.ConvertAll (obj => obj as string);
+				}
+
+				public static List<TransitiveDependenciesObject> From(List<object> untyped)
+				{
+					List<TransitiveDependenciesObject> deserialized = new List<TransitiveDependenciesObject> ();
+
+					foreach (object o in untyped) {
+						Dictionary<string, object> typed = o as Dictionary<string, object>;
+
+						deserialized.Add (new TransitiveDependenciesObject (
+							typed ["name"] as string,
+							typed ["version"] as string,
+							typed ["dependsOn"] as List<object>
+						));
+					}
+
+					return deserialized;
+				}
+			}
+			#endregion
+
+			#region IncompatibilityObject
+			internal class IncompatibilityObject
+			{
+				public readonly string Name;
+				public readonly List<string> Versions;
+
+				private IncompatibilityObject(string name, List<object> versions)
+				{
+					Name = name;
+					Versions = versions.ConvertAll (obj => (string)obj);
+				}
+
+				public static List<IncompatibilityObject> From(List<object> untyped)
+				{
+					List<IncompatibilityObject> deserialized = new List<IncompatibilityObject> ();
+
+					foreach (object o in untyped) {
+						Dictionary<string, object> typed = o as Dictionary<string, object>;
+
+						deserialized.Add (new IncompatibilityObject (
+							typed ["name"] as string,
+							typed ["versions"] as List<object>
+						));
+					}
+
+					return deserialized;
+				}
+			}
+			#endregion
+
 			public readonly List<KitsObject> Kits;
-			public readonly List<string> Incompatibilities;
+			public readonly List<TransitiveDependenciesObject> TransitiveDependnecies;
+			public readonly List<IncompatibilityObject> Incompatibilities;
 			public readonly List<string> Onboardable;
 
-			private DependenciesObject(List<KitsObject> kits, List<string> incompatibilities, List<string> onboardable)
+			private DependenciesObject(
+				List<KitsObject> kits,
+				List<TransitiveDependenciesObject> transitiveDependencies,
+				List<IncompatibilityObject> incompatibilities,
+				List<object> onboardable
+			)
 			{
 				Kits = kits;
+				TransitiveDependnecies = transitiveDependencies;
 				Incompatibilities = incompatibilities;
-				Onboardable = onboardable;
+				Onboardable = onboardable.ConvertAll (obj => (string)obj);
 			}
 
 			public static DependenciesObject From(Dictionary<string, object> untyped)
 			{
 				return new DependenciesObject (
 					KitsObject.From (untyped ["kits"] as List<object>),
-					untyped ["incompatibility"] as List<string>,
-					untyped ["onboardable"] as List<string>
+					TransitiveDependenciesObject.From (untyped ["transitiveDependencies"] as List<object>),
+					IncompatibilityObject.From (untyped ["incompatibility"] as List<object>),
+					untyped ["onboardable"] as List<object>
 				);
 			}
 		}

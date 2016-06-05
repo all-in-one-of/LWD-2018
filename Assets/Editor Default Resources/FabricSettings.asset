@@ -22,6 +22,7 @@ MonoBehaviour:
   dashboardUrl: https://www.fabric.io/anothergamecompany/android/apps/com.anotherfoxguy.lwrd18
   initialization: 0
   flowSequence: 0
+  conflict: 
   kit: 
   installedKits:
   - Name: Crashlytics

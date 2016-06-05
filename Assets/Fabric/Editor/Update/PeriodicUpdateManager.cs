@@ -8,6 +8,7 @@
 	using KitsObject = Dependency.DependencyGraphObject.DependenciesObject.KitsObject;
 	using PluginObject = Dependency.DependencyGraphObject.PluginObject;
 	using KitUtils = Fabric.Internal.Editor.Controller.KitUtils;
+	using VersionedDependency = Dependency.DependencyGraphResolver.VersionedDependency;
 
 	[InitializeOnLoad]
 	internal class PeriodicUpdateManager {
@@ -92,10 +93,10 @@
 			}
 		}
 
-		public static List<string> Resolve(string name)
+		public static HashSet<string> Resolve(string name, Dictionary<string, HashSet<VersionedDependency>> installed)
 		{
 			Dependency.DependencyGraphManager dg = updateChecker.GetDependencyGraphManager ();
-			return dg != null ? dg.Resolve (name) : new List<string> ();
+			return dg != null ? dg.Resolve (name, installed) : new HashSet<string> ();
 		}
 
 		public static bool IsPluginUpdateAvailable()
@@ -143,10 +144,22 @@
 			return dg != null ? dg.LatestAvailableKitVersions () : new KitsList ();
 		}
 
+		public static KitsList LatestAvailableOnboardableKitVersions()
+		{
+			Dependency.DependencyGraphManager dg = updateChecker.GetDependencyGraphManager ();
+			return dg != null ? dg.LatestAvailableOnboardableKitVersions () : new KitsList ();
+		}
+
 		public static PluginObject PluginDescriptor()
 		{
 			Dependency.DependencyGraphManager dg = updateChecker.GetDependencyGraphManager ();
 			return dg != null ? dg.PluginDescriptor () : null;
+		}
+
+		public static HashSet<VersionedDependency> TransitiveDependencyChainFor(string kit)
+		{
+			Dependency.DependencyGraphManager dg = updateChecker.GetDependencyGraphManager ();
+			return dg != null ? Dependency.DependencyGraphManager.TransitiveDependencyChainFor (dg.GraphObject (), kit) : new HashSet<VersionedDependency> ();
 		}
 	}
 }
